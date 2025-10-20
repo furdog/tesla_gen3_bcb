@@ -17,4 +17,4 @@ gcc ${SOURCE} -std=c89 -pedantic -Wall -Wextra -g \
 ./a
 rm a
 
-doxygen doc/Doxyfile
+doxygen docs/Doxyfile

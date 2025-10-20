@@ -1,0 +1,27 @@
+name: Doxygen Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout code ⬇️
+        uses: actions/checkout@v4
+
+      - name: 2. Install Doxygen ⚙️
+        run: sudo apt-get update && sudo apt-get install -y doxygen #graphviz
+
+      - name: 3. Generate Doxygen documentation 🚀
+        run: doxygen docs/Doxyfile
+
+      - name: 4. Deploy to GitHub Pages 🌐
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/html
+          publish_branch: gh-pages

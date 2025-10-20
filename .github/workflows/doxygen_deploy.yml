@@ -19,7 +19,7 @@ jobs:
 
       - name: 2. Install Doxygen ⚙️
         #run: sudo apt-get update && sudo apt-get install -y doxygen #graphviz
-      - uses: ssciwr/doxygen-install@v1
+        uses: ssciwr/doxygen-install@v1
         with:
           version: "1.14.0"
 

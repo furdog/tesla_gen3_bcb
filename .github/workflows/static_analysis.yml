@@ -1,6 +1,5 @@
 name: C/C++ Static Analysis
 
-# Run this workflow on push and pull request events
 on:
   push:
     branches: [ "main" ]
@@ -9,35 +8,21 @@ on:
 
 jobs:
   analysis:
-    # Use the latest Ubuntu runner
     runs-on: ubuntu-latest
+    
+    container:
+      image: gcc:11
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- Dependency Setup ---
-
-      - name: Install Cppcheck and GCC/Build Tools
-        # 'build-essential' installs essential tools including gcc and g++
-        # Cppcheck is installed directly from the package manager.
+      - name: Install Cppcheck
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cppcheck
-
-      - name: Setup Python 3.x
-        # Required for any Python-based analysis scripts like MISRA addons
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-          cache: 'pip' # Optional: Caches dependencies if you install them later
-
-      # --- Script Execution ---
-
+          apt-get update
+          apt-get install -y cppcheck
+        
       - name: Run Analysis Script (test.sh)
-        # Ensure the script is executable and then run it
         run: |
-          # The next line is important if test.sh does not already have executable permissions
           chmod +x test.sh
           ./test.sh NODOXY
-        # If test.sh is located in a subdirectory, adjust the path (e.g., ./scripts/test.sh)

@@ -12,10 +12,11 @@ SOURCE="*.test.c"
 "$MISRA" check ${HEADER}
 
 gcc ${SOURCE} -std=c89 -pedantic -Wall -Wextra -g \
-	      -fsanitize=undefined -fsanitize-undefined-trap-on-error
+	      -fsanitize=undefined -fsanitize-undefined-trap-on-error \
+	      -o test
 
-./a
-rm a
+./test
+rm test
 
 if [ "$1" != "NODOXY" ]; then
 	doxygen docs/Doxyfile

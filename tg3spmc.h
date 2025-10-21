@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+/* TODO common name prefixes for easier autocomplete (_CONST_?) */
 /** Period of CAN message transmission. (milliseconds) */
 #define TG3SPMC_CAN_TX_PERIOD_MS 90u
 
@@ -44,7 +45,8 @@ enum tg3spmc_event {
 	TG3SPMC_EVENT_CONFIG_INVALID, /**< Configuration validation failed. */
 	TG3SPMC_EVENT_POWER_ON,       /**< Module is being powered. */
 	TG3SPMC_EVENT_CHARGE_ENABLED, /**< Charging mode is enabled. */
-	TG3SPMC_EVENT_FAULT           /**< Something went horribly wrong. */
+	TG3SPMC_EVENT_FAULT,          /**< Something went horribly wrong. */
+	TG3SPMC_EVENT_RECOVERY        /**< Recovery from error. */
 };
 
 /**
@@ -620,6 +622,24 @@ bool tg3spmc_read_vars(struct tg3spmc *self, struct tg3spmc_vars *_v)
 }
 
 /**
+ * @brief Set broadcast (either true or false).
+ *
+ * @param self Pointer to the tg3spmc instance.
+ * @param enabled set broadcast enabled/disabled.
+ * @note Broadcast is enabled by default.
+ *
+ * If there are multiple instances of tg3spmc is running, it's advised to
+ * have only one broadcast message enabled. This behaviour may be changed
+ * or enhanced in the future.
+ */
+void tg3spmc_set_broadcast(struct tg3spmc *self, bool enabled)
+{
+	struct _tg3spmc_io *i = &self->_io;
+
+	i->tx.enable_broadcast = enabled;
+}
+
+/**
  * @brief Performs a single step of the module controller's state machine.
  * @param self Pointer to the tg3spmc instance.
  * @param delta_time_ms Time elapsed since the last step (milliseconds).
@@ -714,6 +734,7 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		}
 
 		self->_state = _TG3SPMC_STATE_CONFIG;
+		ev = TG3SPMC_EVENT_RECOVERY;
 
 		/* _TG3SPMC_STATE_CONFIG init */
 		i->rx.has_frames = false;

@@ -17,4 +17,6 @@ gcc ${SOURCE} -std=c89 -pedantic -Wall -Wextra -g \
 ./a
 rm a
 
-doxygen docs/Doxyfile
+if [ "$1" != "NODOXY" ]; then
+	doxygen docs/Doxyfile
+fi

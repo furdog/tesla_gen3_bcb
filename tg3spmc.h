@@ -502,60 +502,46 @@ bool tg3spmc_get_chgen_pin_state(struct tg3spmc *self)
 }
 
 /**
- * @brief Retrieves queued TX frames for immediate sending.
+ * @brief Retrieves queued TX frame for immediate sending.
  *
- * If transmit (TX) messages are currently queued, this method returns
- * the number of available frames and provides a pointer to the internal
- * buffer.
+ * If there any TX frame is queued, this method returns true
+ * and copies message into a frame pointed by `f`.
+ *
+ * All frames should be redirected to a single phase module.
+ * It's up on API user to implement valid CAN transmission.
  *
  * @param self Pointer to the tg3spmc instance.
- * @param[out] f Pointer to a variable that will be set to the 
- * **read-only** internal frame buffer.
- * @return The number of transmit frames available.
- * Returns 0 if none are queued.
+ * @param[out] f Pointer to the frame where data will be copied.
+ * @return **True** if frame was copied, **false** if no TX frames available.
  *
- * @note **Side effects:** This function returns a non-zero frame count 
- * only once per queued batch. The underlying internal buffer is
- * **volatile** and may be altered by the module at any time.
- * Users are advised to send the TX data immediately upon retrieval.
- *
- * @warning The implementation relies on specific internal behavior and may be 
- * **changed** in future versions.
+ * @note **Side effects:** this function will pop queued frames.
  */
-uint8_t tg3spmc_get_tx_frames(struct tg3spmc *self,
-			      const struct tg3spmc_frame **f)
-{ /* TODO, return one frame per call */
+bool tg3spmc_get_tx_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
+{
 	struct _tg3spmc_io *i = &self->_io;
 
-	uint8_t frame_count = i->tx.count;
+	bool frame_available = false;
 
-	if (frame_count > 0u) {
-		*f = i->tx.frames;
-	} else {
-		*f = NULL;
+	if (i->tx.count > 0u) {
+		i->tx.count--;
+
+		*f = i->tx.frames[i->tx.count];
+
+		frame_available = true;
 	}
 
-	return frame_count;
+	return frame_available;
 }
 
 /**
  * @brief Processes and consumes a received (RX) frame.
  *
- * This method acts as the entry point for an incoming CAN frame, delegating 
- * the data handling to the internal frame decoding logic.
- * As currently implemented, the function guarantees consumption of the frame
- * regardless of its content or the module's current state.
+ * All frames from single phase module should be consumed by this function.
+ * It's up on API user to implement valid CAN reception.
  *
  * @param self Pointer to the tg3spmc instance.
- * @param f    A pointer to the **read-only** received
- * 	frame data to be processed.
- * @return Returns \c true in all cases, indicating that the frame has been
- * successfully consumed and will not be returned to the caller.
- *
- * @note The frame data is processed internally by \c _tg3spmc_decode_frame, 
- * which modifies the internal module state based on the frame's content.
- * The consumption is guaranteed regardless of internal buffers or state, 
- * as indicated by the hardcoded \c return \c true.
+ * @param f    A pointer to the received frame.
+ * @return Returns true if frame was consumed successfully.
  */
 bool tg3spmc_put_rx_frame(struct tg3spmc *self,
 			  struct tg3spmc_frame *f)

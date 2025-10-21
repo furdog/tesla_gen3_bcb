@@ -17,10 +17,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: cppcheck
-        uses: deep5050/cppcheck-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN}}
+      - name: Install Cppcheck
+        run: |
+          apt-get update
+          apt-get install -y cppcheck
         
       - name: Run Analysis Script (test.sh)
         run: |

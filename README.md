@@ -1,5 +1,7 @@
 # Tesla GEN3 Single Phase Module Controller
 
+Doxygen documentation available at: https://furdog.github.io/tesla_gen3_bcb/
+
 ## Overview
 
 The `tg3spmc` library provides a **hardware-agnostic** logic layer for controlling a **Tesla GEN3 Single Phase Module** (tg3spmc), which is an internal component of the Tesla GEN3 Battery Controller Board (BCB).

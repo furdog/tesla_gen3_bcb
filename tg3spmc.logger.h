@@ -15,7 +15,7 @@
 bool tg3spmc_log(struct tg3spmc *self, char *buf, size_t len)
 {
 	struct _tg3spmc_io       *i = &self->_io;
-	struct _tg3spmc_vars     *v = &self->_vars;
+	struct  tg3spmc_vars     *v = &self->_vars;
 
 	bool result = true;
 	int32_t required_len;

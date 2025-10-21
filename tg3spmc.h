@@ -61,22 +61,22 @@ enum _tg3spmc_state {
  * @brief Bit flags representing the module's status,
  * decoded from CAN messages.
  */
-enum _tg3spmc_status_flag {
-	_TG3SPMC_STATUS_FLAG_EN       = 1u,  /**< Enable flag. */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN2 = 2u,  /**< Unknown status bit 2. */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN3 = 4u,  /**< Unknown status bit 3. */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN4 = 8u,  /**< Unknown status bit 4. */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN5 = 16u, /**< Unknown status bit 5. */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN6 = 32u, /**< Unknown status bit 6. */
+enum tg3spmc_status_flag {
+	TG3SPMC_STATUS_FLAG_EN       = 1u,  /**< Enable flag. */
+	TG3SPMC_STATUS_FLAG_UNKNOWN2 = 2u,  /**< Unknown status bit 2. */
+	TG3SPMC_STATUS_FLAG_UNKNOWN3 = 4u,  /**< Unknown status bit 3. */
+	TG3SPMC_STATUS_FLAG_UNKNOWN4 = 8u,  /**< Unknown status bit 4. */
+	TG3SPMC_STATUS_FLAG_UNKNOWN5 = 16u, /**< Unknown status bit 5. */
+	TG3SPMC_STATUS_FLAG_UNKNOWN6 = 32u, /**< Unknown status bit 6. */
 
 	/** Probably charger ready to start flag AC->DC. */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN7 = 64u,
+	TG3SPMC_STATUS_FLAG_UNKNOWN7 = 64u,
 
 	/**
 	 * @brief Some internal flag (Toggles 3 times when no HVDC present).
 	 * Final state is 0
 	 */
-	_TG3SPMC_STATUS_FLAG_UNKNOWN8 = 128u
+	TG3SPMC_STATUS_FLAG_UNKNOWN8 = 128u
 };
 
 /**
@@ -155,7 +155,7 @@ struct tg3spmc_config {
  * @brief Read-only variables representing the module's current status,
  * measurements, and health.
  */
-struct _tg3spmc_vars {
+struct tg3spmc_vars {
 	float    voltage_dc_V; /**< Measured DC output voltage (V). */
 	uint16_t voltage_ac_V; /**< Measured AC input voltage (V). */
 	float    current_dc_A; /**< Measured DC output current (A). */
@@ -204,7 +204,7 @@ struct tg3spmc
 	/** Configuration settings structure. */
 	struct  tg3spmc_config _config;
 	/** Read-only module variables and measurements. */
-	struct _tg3spmc_vars   _vars;
+	struct  tg3spmc_vars   _vars;
 };
 
 /******************************************************************************
@@ -244,7 +244,7 @@ void _tg3spmc_reader_init(struct _tg3spmc_reader *self)
  */
 void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 {
-	struct _tg3spmc_vars *v = &self->_vars;
+	struct  tg3spmc_vars *v = &self->_vars;
 	struct _tg3spmc_io   *i = &self->_io;
 
 	/* Tells us if we received a valid frame after all */
@@ -436,7 +436,7 @@ void _tg3spmc_queue_tx(struct tg3spmc *self)
 bool _tg3spmc_detected_errors_during_charge(struct tg3spmc *self)
 {
 	struct _tg3spmc_io   *i = &self->_io;
-	struct _tg3spmc_vars *v = &self->_vars;
+	struct  tg3spmc_vars *v = &self->_vars;
 
 	bool fault = false;
 
@@ -464,7 +464,7 @@ void tg3spmc_init(struct tg3spmc *self, uint8_t id)
 {
 	struct _tg3spmc_io     *i = &self->_io;
 	struct  tg3spmc_config *s = &self->_config;
-	struct _tg3spmc_vars   *v = &self->_vars;
+	struct  tg3spmc_vars   *v = &self->_vars;
 
 	/* Base */
 	self->_id = id;
@@ -598,6 +598,28 @@ bool tg3spmc_put_rx_frame(struct tg3spmc *self,
 }
 
 /**
+ * @brief Reads charger variables.
+ *
+ * @param self Pointer to the tg3spmc instance.
+ * @param _v   A pointer to the object where read variables will be stored.
+ * @return Returns true if charge variables has been read successfully.
+ */
+bool tg3spmc_read_vars(struct tg3spmc *self, struct tg3spmc_vars *_v)
+{
+	struct _tg3spmc_io   *i = &self->_io;
+	struct  tg3spmc_vars *v = &self->_vars;
+
+	bool vars_been_read = false;
+
+	if (i->rx.has_frames) {
+		*_v = *v;
+		vars_been_read = true;
+	}
+
+	return vars_been_read;
+}
+
+/**
  * @brief Performs a single step of the module controller's state machine.
  * @param self Pointer to the tg3spmc instance.
  * @param delta_time_ms Time elapsed since the last step (milliseconds).
@@ -694,7 +716,8 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		self->_state = _TG3SPMC_STATE_CONFIG;
 
 		/* _TG3SPMC_STATE_CONFIG init */
-		/* Nothing really to init here */
+		i->rx.has_frames = false;
+
 		break;
 
 	default:

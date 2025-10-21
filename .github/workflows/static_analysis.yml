@@ -19,8 +19,8 @@ jobs:
 
       - name: Install Cppcheck
         run: |
-          apt-get update
-          apt-get install -y cppcheck
+          pip3 install cppcheck
+          cppcheck --version
         
       - name: Run Analysis Script (test.sh)
         run: |

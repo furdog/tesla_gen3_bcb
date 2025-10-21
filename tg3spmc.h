@@ -12,8 +12,14 @@
 #include <assert.h>
 #include <stdio.h>
 
-/** Period of CAN message transmission (milliseconds) */
+/** Period of CAN message transmission. (milliseconds) */
 #define TG3SPMC_CAN_TX_PERIOD_MS 90u
+
+/** How long should we wait before setting RX timeout? (milliseconds) */
+#define TG3SPMC_CAN_RX_TIMEOUT_MS 1000u
+
+/** Fault recovery time (milliseconds) */
+#define TG3SPMC_FAULT_RECOVERY_TIME_MS 1000u
 
 /******************************************************************************
  * GENERIC
@@ -37,16 +43,18 @@ enum tg3spmc_event {
 	TG3SPMC_EVENT_NONE,           /**< No event. */
 	TG3SPMC_EVENT_CONFIG_INVALID, /**< Configuration validation failed. */
 	TG3SPMC_EVENT_POWER_ON,       /**< Module is being powered. */
-	TG3SPMC_EVENT_CHARGE_ENABLED  /**< Charging mode is enabled. */
+	TG3SPMC_EVENT_CHARGE_ENABLED, /**< Charging mode is enabled. */
+	TG3SPMC_EVENT_FAULT           /**< Something went horribly wrong. */
 };
 
 /**
  * @brief Internal states of the module controller, driven by the library.
  */
 enum _tg3spmc_state {
-	_TG3SPMC_STATE_CONFIG, /**< Awaiting valid configuration settings. */
-	_TG3SPMC_STATE_BOOT,   /**< Powering on and initializing the module. */
-	_TG3SPMC_STATE_RUNNING /**< Module is fully operational. */
+	_TG3SPMC_STATE_CONFIG,  /**< Awaiting valid configuration settings. */
+	_TG3SPMC_STATE_BOOT,    /**< Powering and initializing the module. */
+	_TG3SPMC_STATE_RUNNING, /**< Module is fully operational. */
+	_TG3SPMC_STATE_FAULT    /**< Something went very wrong. */
 };
 
 /**
@@ -237,6 +245,10 @@ void _tg3spmc_reader_init(struct _tg3spmc_reader *self)
 void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 {
 	struct _tg3spmc_vars *v = &self->_vars;
+	struct _tg3spmc_io   *i = &self->_io;
+
+	/* Tells us if we received a valid frame after all */
+	bool valid_frame = true;
 
 	uint32_t base_id;
 
@@ -285,7 +297,13 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		v->current_limit_due_temp_A = f->data[0] * 0.234375;
 		break;
 	default:
+		valid_frame = false;
 		break;
+	}
+
+	if (valid_frame) {
+		i->rx.has_frames = true;
+		i->rx.timer_ms   = 0u;
 	}
 }
 
@@ -405,6 +423,33 @@ void _tg3spmc_queue_tx(struct tg3spmc *self)
 	} else {
 		i->tx.count = 2u;
 	}
+}
+
+/**
+ * @brief This function will try to catch common error during charging.
+ * Timeouts, module errors, etc.
+ *
+ * It must immediately go into error recovery state, after detection.
+ * 
+ * @param self Pointer to the tg3spmc instance.
+ */
+bool _tg3spmc_detected_errors_during_charge(struct tg3spmc *self)
+{
+	struct _tg3spmc_io   *i = &self->_io;
+	struct _tg3spmc_vars *v = &self->_vars;
+
+	bool fault = false;
+
+	if (i->rx.timer_ms >= TG3SPMC_CAN_RX_TIMEOUT_MS) {
+		i->rx.has_frames = false;
+		fault = true;
+	}
+
+	if ((i->rx.has_frames) && (v->fault == true)) {
+		fault = true;
+	}
+
+	return fault;
 }
 
 /******************************************************************************
@@ -566,6 +611,8 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 
 	enum tg3spmc_event ev = TG3SPMC_EVENT_NONE;
 
+	/* TODO, make postconditions and preconditions clear enough.
+	 * FSM must follow Design-By-Contract approach */
 	switch (self->_state) {
 	case _TG3SPMC_STATE_CONFIG:
 		/* Validate config before proceed to the next state */
@@ -575,11 +622,16 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 			break;
 		}
 
-		ev = TG3SPMC_EVENT_POWER_ON;
 		self->_state = _TG3SPMC_STATE_BOOT;
+		ev = TG3SPMC_EVENT_POWER_ON;
+
+		/* Power on module */
+		i->pwron_out = true;
+
+		/* _TG3SPMC_STATE_BOOT init */
 		self->_timer_ms = 0u;
-		i->pwron_out = true; /* Power on module */
-		i->tx.timer_ms = 0u; /* Reset TX timer*/
+		i->tx.timer_ms  = 0u;
+
 		break;
 
 	/* Keep little delay before transmission and charging start */
@@ -595,22 +647,59 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 
 		ev = TG3SPMC_EVENT_CHARGE_ENABLED;
 		self->_state = _TG3SPMC_STATE_RUNNING;
-		i->chgen_out = true; /* Enable charge mode */
+
+		/* Enable charge mode */
+		i->chgen_out = true;
+
+		/* _TG3SPMC_STATE_RUNNING init */
+		i->rx.timer_ms   = 0u;
+		i->rx.has_frames = false;
+
 		break;
 
-	/* We send messages in this state */
+	/* We send messages and validate charging process in this state */
 	case _TG3SPMC_STATE_RUNNING:
 		i->tx.timer_ms += delta_time_ms;
+		i->rx.timer_ms += delta_time_ms;
 
 		if (i->tx.timer_ms >= TG3SPMC_CAN_TX_PERIOD_MS) {
 			i->tx.timer_ms -= TG3SPMC_CAN_TX_PERIOD_MS;
 
 			_tg3spmc_queue_tx(self);
 		}
+
+		if (_tg3spmc_detected_errors_during_charge(self)) {
+			self->_state = _TG3SPMC_STATE_FAULT;
+			ev = TG3SPMC_EVENT_FAULT;
+
+			/* Disable module power and charge */
+			i->pwron_out = false;
+			i->chgen_out = false;
+
+			/* TG3SPMC_EVENT_FAULT init */
+			i->tx.count     = 0u;
+			self->_timer_ms = 0u;
+		}
+
+		break;
+
+	case _TG3SPMC_STATE_FAULT:
+		/* Wait before recovery */
+		self->_timer_ms += delta_time_ms;
+
+		if (self->_timer_ms < TG3SPMC_FAULT_RECOVERY_TIME_MS) {
+			break;
+		}
+
+		self->_state = _TG3SPMC_STATE_CONFIG;
+
+		/* _TG3SPMC_STATE_CONFIG init */
+		/* Nothing really to init here */
 		break;
 
 	default:
 		assert(0);
+		while (1) {};
 		break;
 	}
 

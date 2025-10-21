@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <stdio.h>
+
 /*
  * @brief Logs the contents of the tg3spmc structure into a buffer with
  * 	visual alignment.

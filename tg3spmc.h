@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
-#include <stdio.h>
 
 /* TODO common name prefixes for easier autocomplete (_CONST_?) */
 /** Period of CAN message transmission. (milliseconds) */

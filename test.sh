@@ -13,10 +13,10 @@ SOURCE="*.test.c"
 
 gcc ${SOURCE} -std=c89 -pedantic -Wall -Wextra -g \
 	      -fsanitize=undefined -fsanitize-undefined-trap-on-error \
-	      -o test
+	      -o test_out
 
-./test
-rm test
+./test_out
+rm test_out
 
 if [ "$1" != "NODOXY" ]; then
 	doxygen docs/Doxyfile

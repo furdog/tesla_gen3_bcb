@@ -2,16 +2,18 @@ name: C/C++ Static Analysis
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - "main"
+    paths:
+      - '**/*.h'
+      - '**/*.c'
 
 jobs:
   analysis:
     runs-on: ubuntu-latest
     
     container:
-      image: gcc:11
+      image: gcc:latest
 
     steps:
       - name: Checkout repository

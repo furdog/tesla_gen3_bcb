@@ -50,7 +50,7 @@ void tg3spmc_test_config_valid(struct tg3spmc *self)
 void tg3spmc_test_boot(struct tg3spmc *self)
 {
 	/* Should do nothing during CAN_TX_PERIOD */
-	assert(tg3spmc_step(self, TG3SPMC_CAN_TX_PERIOD_MS - 1u) ==
+	assert(tg3spmc_step(self, TG3SPMC_CONST_CAN_TX_PERIOD_MS - 1u) ==
 		TG3SPMC_EVENT_NONE);
 	/* Must enable all control pins after that */
 	assert(tg3spmc_step(self, 1) == TG3SPMC_EVENT_CHARGE_ENABLED);
@@ -125,10 +125,10 @@ void tg3spmc_test_normal_init(struct tg3spmc *self)
 
 void tg3spmc_test_rx_timeout(struct tg3spmc *self)
 {
-	assert(tg3spmc_step(self, TG3SPMC_FAULT_RECOVERY_TIME_MS - 1u) ==
+	assert(tg3spmc_step(self, TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS - 1u) ==
 	       TG3SPMC_EVENT_NONE);
 	assert(tg3spmc_step(self, 1u) == TG3SPMC_EVENT_FAULT);
-	assert(tg3spmc_step(self, TG3SPMC_FAULT_RECOVERY_TIME_MS) ==
+	assert(tg3spmc_step(self, TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS) ==
 		TG3SPMC_EVENT_RECOVERY);
 
 	/* Must pass after error recovery */
@@ -142,7 +142,7 @@ void tg3spmc_test_mod_fault(struct tg3spmc *self)
 	tg3spmc_put_rx_frame(self, &test_frames[0]);
 
 	assert(tg3spmc_step(self, 0u) == TG3SPMC_EVENT_FAULT);
-	assert(tg3spmc_step(self, TG3SPMC_FAULT_RECOVERY_TIME_MS) ==
+	assert(tg3spmc_step(self, TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS) ==
 		TG3SPMC_EVENT_RECOVERY);
 
 	test_frames[0].data[2] = 0x00; /* undo fault artifically */

@@ -13,13 +13,13 @@
 
 /* TODO common name prefixes for easier autocomplete (_CONST_?) */
 /** Period of CAN message transmission. (milliseconds) */
-#define TG3SPMC_CAN_TX_PERIOD_MS 90u
+#define TG3SPMC_CONST_CAN_TX_PERIOD_MS 90u
 
 /** How long should we wait before setting RX timeout? (milliseconds) */
-#define TG3SPMC_CAN_RX_TIMEOUT_MS 1000u
+#define TG3SPMC_CONST_CAN_RX_TIMEOUT_MS 1000u
 
 /** Fault recovery time (milliseconds) */
-#define TG3SPMC_FAULT_RECOVERY_TIME_MS 1000u
+#define TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS 1000u
 
 /******************************************************************************
  * GENERIC
@@ -441,7 +441,7 @@ bool _tg3spmc_detected_errors_during_charge(struct tg3spmc *self)
 
 	bool fault = false;
 
-	if (i->rx.timer_ms >= TG3SPMC_CAN_RX_TIMEOUT_MS) {
+	if (i->rx.timer_ms >= TG3SPMC_CONST_CAN_RX_TIMEOUT_MS) {
 		i->rx.has_frames = false;
 		fault = true;
 	}
@@ -682,7 +682,7 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		/* Increment TX timer */
 		i->tx.timer_ms += delta_time_ms;
 
-		if (self->_timer_ms < TG3SPMC_CAN_TX_PERIOD_MS) {
+		if (self->_timer_ms < TG3SPMC_CONST_CAN_TX_PERIOD_MS) {
 			break;
 		}
 
@@ -703,8 +703,8 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		i->tx.timer_ms += delta_time_ms;
 		i->rx.timer_ms += delta_time_ms;
 
-		if (i->tx.timer_ms >= TG3SPMC_CAN_TX_PERIOD_MS) {
-			i->tx.timer_ms -= TG3SPMC_CAN_TX_PERIOD_MS;
+		if (i->tx.timer_ms >= TG3SPMC_CONST_CAN_TX_PERIOD_MS) {
+			i->tx.timer_ms -= TG3SPMC_CONST_CAN_TX_PERIOD_MS;
 
 			_tg3spmc_queue_tx(self);
 		}
@@ -728,7 +728,7 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		/* Wait before recovery */
 		self->_timer_ms += delta_time_ms;
 
-		if (self->_timer_ms < TG3SPMC_FAULT_RECOVERY_TIME_MS) {
+		if (self->_timer_ms < TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS) {
 			break;
 		}
 

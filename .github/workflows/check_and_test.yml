@@ -1,4 +1,4 @@
-name: Run Automated Tests
+name: Check and Test
 
 on:
   push:
@@ -25,7 +25,10 @@ jobs:
           apt-get update
           apt-get install -y cppcheck
         
-      - name: Run Analysis Script (test.sh)
+      - name: Run MISRA check
         run: |
-          chmod +x test.sh
-          ./test.sh NODOXY
+          make misra
+
+      - name: Run automated tests
+        run: |
+          make test

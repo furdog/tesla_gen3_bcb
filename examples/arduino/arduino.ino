@@ -1,4 +1,5 @@
 #include "src/tg3spmc.h"
+#include "src/tg3spmc.logger.h"
 #include "delta_time.h"
 
 /* Replace simple TWAI frame with our tg3spmc frame.
@@ -121,26 +122,36 @@ struct simple_twai stw0;
 struct simple_twai stw1;
 
 /* Single Tesla one phase module */
-struct tg3spmc mod;
+#define MOD1_PWRON_PIN 18u
+#define MOD1_CHGEN_PIN 19u
+
+struct tg3spmc mod1;
 struct tg3spmc_config config;
 
 /* For timing purposes */
 struct delta_time dt;
 
+/* Buffer for log */
+char log_buf[1024];
+
 void setup()
 {
 	delta_time_init(&dt);
 
+	/* Peripherals */
+	pinMode(MOD1_PWRON_PIN, OUTPUT);
+	pinMode(MOD1_CHGEN_PIN, OUTPUT);
+
 	/* ESP32C6 has two TWAI(CAN2.0) controllers */
 	stw0.id = 0;
-	stw0.tx = GPIO_NUM_13;
-	stw0.rx = GPIO_NUM_12;
+	stw0.tx = GPIO_NUM_13; /* Conflicts with USB */
+	stw0.rx = GPIO_NUM_12; /* Conflicts with USB */
 
 	stw1.id = 1;
 	stw1.tx = GPIO_NUM_14;
 	stw1.rx = GPIO_NUM_15;
 
-	simple_twai_init(&stw0);
+	/* simple_twai_init(&stw0); */
 	simple_twai_init(&stw1);
 
 	/* Tesla module config */
@@ -149,12 +160,18 @@ void setup()
 	config.current_ac_A       = 0.0f;
 
 	/* Init module 1 (0, *1, 2) */
-	tg3spmc_init(&mod, 1u);
-	tg3spmc_set_config(&mod, config);
+	tg3spmc_init(&mod1, 1u);
+	tg3spmc_set_config(&mod1, config);
 }
 
 void loop()
 {
+	/* Log timer */
+	static uint32_t log_timer_ms = 0;
+
+	/* Module event */
+	enum tg3spmc_event ev;
+
 	/* General purpose CAN frame */
 	struct tg3spmc_frame f;
 
@@ -162,20 +179,33 @@ void loop()
 	uint32_t delta_time_ms = delta_time_update_ms(&dt, millis());
 
 	/* TWAI */
-	simple_twai_update(&stw0);
+	/* simple_twai_update(&stw0); */
 	simple_twai_update(&stw1);
 
 	/* TESLA */
-	tg3spmc_step(&mod, delta_time_ms);
+	ev = tg3spmc_step(&mod1, delta_time_ms);
 
-	if (tg3spmc_get_tx_frame(&mod, &f)) {
-		simple_twai_send(&stw0, &f);
+	if (tg3spmc_get_tx_frame(&mod1, &f)) {
+		simple_twai_send(&stw1, &f);
 	}
 
-	if (simple_twai_recv(&stw0, &f)) {
-		tg3spmc_put_rx_frame(&mod, &f);
+	if (simple_twai_recv(&stw1, &f)) {
+		tg3spmc_put_rx_frame(&mod1, &f);
 	}
 
-	digitalWrite(-1, tg3spmc_get_pwron_pin_state(&mod));
-	digitalWrite(-1, tg3spmc_get_chgen_pin_state(&mod));
+	digitalWrite(MOD1_PWRON_PIN, tg3spmc_get_pwron_pin_state(&mod1));
+	digitalWrite(MOD1_CHGEN_PIN, tg3spmc_get_chgen_pin_state(&mod1));
+
+	/* Log some stuff every 1000ms, + log events */
+	if (ev != 0) {
+		printf("TG3SPMC_EVENT_%s\n", tg3spmc_get_event_name(ev));
+	}
+
+	log_timer_ms += delta_time_ms;
+	if (log_timer_ms >= 1000u) {
+		log_timer_ms -= 1000u;
+
+		tg3spmc_log(&mod1, log_buf, 1024);
+		printf("%s\n\n", log_buf);
+	}
 }

@@ -1,0 +1,17 @@
+board_manager:
+  additional_urls:
+    - https://espressif.github.io/arduino-esp32/package_esp32_index.json
+
+directories:
+  user: "./libraries/"
+
+logging:
+  file: ""
+  format: text
+  level: trace
+
+sketch:
+  always_export_binaries: true
+
+updater:
+  enable_notification: true

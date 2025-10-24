@@ -205,7 +205,12 @@ void loop()
 	if (log_timer_ms >= 1000u) {
 		log_timer_ms -= 1000u;
 
-		tg3spmc_log(&mod1, log_buf, 1024);
-		printf("%s\n\n", log_buf);
+		/* TODO: read of private member MUST be avoided
+		 * possible solutions:
+		 * 	check value of tg3spmc_read_vars or update API */
+		if (mod1._io.rx.has_frames) {
+			tg3spmc_log(&mod1, log_buf, 1024);
+			printf("%s\n\n", log_buf);
+		}
 	}
 }

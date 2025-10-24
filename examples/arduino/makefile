@@ -5,21 +5,27 @@ BOARD_PACKAGE := esp32:esp32
 SOURCE_FILES := ../../*.h
 DEST_DIR := ./src/
 
-all: compile
+# Define the FQBN and port for upload
+FQBN := esp32:esp32:esp32c6
+PORT ?= /dev/ttyUSB0
+
+all: compile upload monitor
 
 copy-files:
-	@echo "--- Copying required files before compile ---"
-	mkdir -p $(DEST_DIR) # Create destination directory if it doesn't exist
+	mkdir -p $(DEST_DIR)
 	cp $(SOURCE_FILES) $(DEST_DIR)
-	@echo "--- File copying complete ---"
 
 compile: copy-files
-	arduino-cli --config-file arduino-cli.yaml compile -b esp32:esp32:esp32c6
+	arduino-cli --config-file arduino-cli.yaml compile -b $(FQBN)
+
+upload:
+	arduino-cli --config-file arduino-cli.yaml upload -b $(FQBN) -p $(PORT)
+
+monitor:
+	arduino-cli --config-file arduino-cli.yaml monitor -p $(PORT)
 
 board-install:
-	# Ensure the index is updated before installing
 	arduino-cli core update-index
-	# Install the specified board package
 	arduino-cli core install $(BOARD_PACKAGE)
 
-.PHONY: all compile board-install copy-files
+.PHONY: all compile board-install copy-files upload monitor

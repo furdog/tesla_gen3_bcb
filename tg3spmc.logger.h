@@ -1,6 +1,26 @@
 #include <stdint.h>
 #include <stdio.h>
 
+const char *tg3spmc_get_event_name(uint8_t ev)
+{
+	const char *ev_name = "UNKNOWN";
+
+	const char *ev_names[6u] = {
+		"NONE",
+		"CONFIG_INVALID",
+		"POWER_ON",
+		"CHARGE_ENABLED",
+		"FAULT",
+		"RECOVERY"
+	};
+
+	if (ev < 6u) {
+		ev_name = ev_names[ev];
+	}
+
+	return ev_name;
+}
+
 /*
  * @brief Logs the contents of the tg3spmc structure into a buffer with
  * 	visual alignment.

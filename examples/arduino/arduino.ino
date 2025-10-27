@@ -141,6 +141,7 @@ void setup()
 	/* Peripherals */
 	pinMode(MOD1_PWRON_PIN, OUTPUT);
 	pinMode(MOD1_CHGEN_PIN, OUTPUT);
+	Serial.begin(921600);
 
 	/* ESP32C6 has two TWAI(CAN2.0) controllers */
 	stw0.id = 0;

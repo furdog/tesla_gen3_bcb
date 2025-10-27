@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-/* TODO common name prefixes for easier autocomplete (_CONST_?) */
 /** Period of CAN message transmission. (milliseconds) */
 #define TG3SPMC_CONST_CAN_TX_PERIOD_MS 90u
 

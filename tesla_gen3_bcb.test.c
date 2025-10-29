@@ -50,7 +50,7 @@ void tg3spmc_test_config_valid(struct tg3spmc *self)
 void tg3spmc_test_boot(struct tg3spmc *self)
 {
 	/* Should do nothing during CAN_TX_PERIOD */
-	assert(tg3spmc_step(self, TG3SPMC_CONST_CAN_TX_PERIOD_MS - 1u) ==
+	assert(tg3spmc_step(self, TG3SPMC_CONST_BOOT_TIME_MS - 1u) ==
 		TG3SPMC_EVENT_NONE);
 	/* Must enable all control pins after that */
 	assert(tg3spmc_step(self, 1) == TG3SPMC_EVENT_CHARGE_ENABLED);
@@ -65,7 +65,6 @@ void tg3spmc_test_tx_no_broadcast(struct tg3spmc *self)
 	assert(tg3spmc_get_tx_frame(self, &f) == false);
 	assert(tg3spmc_step(self, 0) == TG3SPMC_EVENT_NONE);
 	assert(tg3spmc_get_tx_frame(self, &f) == true);
-	assert(tg3spmc_get_tx_frame(self, &f) == true);
 	assert(tg3spmc_get_tx_frame(self, &f) == false);
 }
 
@@ -77,12 +76,13 @@ void tg3spmc_test_tx(struct tg3spmc *self)
 	assert(tg3spmc_get_tx_frame(self, &f) == false);
 	assert(tg3spmc_step(self, 0) == TG3SPMC_EVENT_NONE);
 
-	/* Broadcast goes first */
 	assert(tg3spmc_get_tx_frame(self, &f) == true);
+	assert(tg3spmc_get_tx_frame(self, &f) == true);
+
+	/* Broadcast 0x45C goes second (TODO validate ID)*/
 	assert(self->_hold_start == true);
 	assert(f.data[3] == 0x0E); /* Todo check for 0x2E */
 
-	assert(tg3spmc_get_tx_frame(self, &f) == true);
 	assert(tg3spmc_get_tx_frame(self, &f) == true);
 	assert(tg3spmc_get_tx_frame(self, &f) == false);
 }
@@ -130,7 +130,7 @@ void tg3spmc_test_normal_init(struct tg3spmc *self)
 
 void tg3spmc_test_rx_timeout(struct tg3spmc *self)
 {
-	assert(tg3spmc_step(self, TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS - 1u) ==
+	assert(tg3spmc_step(self, TG3SPMC_CONST_CAN_RX_TIMEOUT_MS - 1u) ==
 	       TG3SPMC_EVENT_NONE);
 	assert(tg3spmc_step(self, 1u) == TG3SPMC_EVENT_FAULT);
 	assert(tg3spmc_step(self, TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS) ==

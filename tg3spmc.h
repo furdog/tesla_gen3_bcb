@@ -20,6 +20,11 @@
 /** Fault recovery time (milliseconds) */
 #define TG3SPMC_CONST_FAULT_RECOVERY_TIME_MS 1000u
 
+/** Boot time (milliseconds).
+ * Longer boot values allows module to initialize correctly after fault.
+ * (Proven experimentally) */
+#define TG3SPMC_CONST_BOOT_TIME_MS 1000u
+
 /******************************************************************************
  * GENERIC
  *****************************************************************************/
@@ -66,17 +71,17 @@ enum tg3spmc_status_flag {
 	TG3SPMC_STATUS_FLAG_UNKNOWN2 = 2u,  /**< Unknown status bit 2. */
 	TG3SPMC_STATUS_FLAG_UNKNOWN3 = 4u,  /**< Unknown status bit 3. */
 	TG3SPMC_STATUS_FLAG_UNKNOWN4 = 8u,  /**< Unknown status bit 4. */
-	TG3SPMC_STATUS_FLAG_UNKNOWN5 = 16u, /**< Unknown status bit 5. */
-	TG3SPMC_STATUS_FLAG_UNKNOWN6 = 32u, /**< Unknown status bit 6. */
 
-	/** Probably charger ready to start flag AC->DC. */
-	TG3SPMC_STATUS_FLAG_UNKNOWN7 = 64u,
+	/** Probably charger ready to start AC->DC.
+	 * Goes into 0 if power output has started */
+	TG3SPMC_STATUS_FLAG_UNKNOWN5 = 16u,
 
-	/**
-	 * @brief Some internal flag (Toggles 3 times when no HVDC present).
-	 * Final state is 1. Always 0 if no charge mode enabled? TODO survey
-	 */
-	TG3SPMC_STATUS_FLAG_UNKNOWN8 = 128u
+	/** Some internal flag (Toggles 3 times when no HVDC present).
+	 * Final state is 1. Always 0 if no charge mode enabled? TODO survey */
+	TG3SPMC_STATUS_FLAG_UNKNOWN6 = 32u,
+
+	TG3SPMC_STATUS_FLAG_UNKNOWN7 = 64u, /**< Unknown status bit 7. */
+	TG3SPMC_STATUS_FLAG_UNKNOWN8 = 128u /**< Unknown status bit 8. */
 };
 
 /**
@@ -110,6 +115,9 @@ struct _tg3spmc_reader
 {
 	/** Timer used for monitoring frame reception timeouts. */
 	uint32_t timer_ms;
+
+	/** Received frames (bits flagged) */
+	uint8_t recv_flags;
 
 	/** Flag indicating if new frames have been received in the step. */
 	bool has_frames;
@@ -199,6 +207,9 @@ struct tg3spmc
 	/** General purpose timer for state transitions and timeouts (ms). */
 	uint32_t _timer_ms;
 
+	/** Stores fault cause in case of fault event */
+	uint8_t fault_cause;
+
 	/** Hold charger start when in RUNNING state.
 	 *  Necessary to pass initial setup to the charger */
 	bool _hold_start;
@@ -235,6 +246,8 @@ void _tg3spmc_reader_init(struct _tg3spmc_reader *self)
 {
 	/* TODO implement properly */
 	self->timer_ms = 0u;
+
+	self->recv_flags = 0u;
 
 	self->has_frames = false;
 }
@@ -283,15 +296,22 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 
 		v->fault      = ((f->data[2] & 0x04u) != 0u) ? true : false;
 
-		/* Bit 5 must be present and data[0] must change,
-		 * but it doesn't by unknown reason
-		 * (this firmware does not work at this point) */
+		/* Bit 6 present when there is a HVDC, then data[0] grows */
+		/* Bit 5 is present after some time if 0x42C frame was sent
+		 * After bit 5 is present, status bit 5 goes true too
+		 *
+		 * It looks like bits 5 and 6 are mapped to
+		 * status bits somehow! */
 
 		/* When bit 4 is present - AC current flow starts */
+
+		i->rx.recv_flags |= (1u << 0u);
 		break;
 	case 0x217u:
 		/* Status Message: Raw status byte. */
 		v->status = f->data[0];
+
+		i->rx.recv_flags |= (1u << 1u);
 		break;
 	case 0x227u:
 		/* Approximate fractional representation: 1/96 or 2/192
@@ -306,27 +326,39 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		 * It's probably two consequent divisions, 1/9/128 */
 		v->current_dc_A =
 			((f->data[5] << 8u) | f->data[4]) * 0.000839233;
+
+		i->rx.recv_flags |= (1u << 2u);
 		break;
 	case 0x237u:
 		/* Temp Msg 1: Temp sensor readings and target temp. */
 		v->temp1_C = (int16_t)f->data[0] - 40;
 		v->temp2_C = (int16_t)f->data[1] - 40;
 		v->inlet_target_temp_C = (int16_t)f->data[5] - 40;
+
+		i->rx.recv_flags |= (1u << 3u);
 		break;
 	case 0x247u:
 		/* 15/64, close to 1/4 */
 		/* Temp Msg 2: Current limit due to temperature. */
 		v->current_limit_due_temp_A = f->data[0] * 0.234375;
+
+		i->rx.recv_flags |= (1u << 4u);
 		break;
 
-	case 0x347:
+	case 0x347u:
 		/* 1000ms period
 		 * byte[2] goes 0x80 shortly when there's
 		 * some distruption in AC supply
 		 * (lose or bad connection to AC socket (sparks)) */
 		break;
 
-	case 0x537:
+	case 0x467u:
+		/* 100ms period
+		 * byte[0], byte[1] goes 7E 09 (24300 decimal in little endian)
+		 * It slowly increases to that value after start, approx 5s */
+		break;
+
+	case 0x537u:
 		/* 900ms period
 		 * Probably fragmented CAN message
 		 * byte[0] is an index of fragment
@@ -335,7 +367,7 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		 * */
 		break;
 
-	case 0x717:
+	case 0x717u:
 		/* 100ms period
 		 * Probably fragmented CAN message
 		 * byte[0] is an index of fragment (range: 0x01 - 0x1C)
@@ -349,7 +381,7 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		break;
 	}
 
-	if (valid_frame) {
+	if (valid_frame && (i->rx.recv_flags == (1u << 5u)) - 1u) {
 		i->rx.has_frames = true;
 		i->rx.timer_ms   = 0u;
 	}
@@ -406,7 +438,7 @@ void _tg3spmc_encode_frame_h42C(struct tg3spmc *self,
 	uint16_t raw_set_current_ac_A = s->current_ac_A * 1500.0f;
 
 	/* Use specific module ID */
-	f->id  = 0x42Cu + self->_id;
+	f->id  = 0x42Cu + (self->_id * 0x10u);
 	f->len = 8;
 
 	f->data[2] = (raw_set_current_ac_A & 0x00FFu) >> 0u;
@@ -430,7 +462,7 @@ void _tg3spmc_encode_frame_h42C(struct tg3spmc *self,
 }
 
 /**
- * @brief Encodes the 0x368 (Static) CAN frame.
+ * @brief Encodes the 0x368 (Static Broadcast) CAN frame.
  *
  * This frame contains static data and is sent periodically.
  * @param self Pointer to the tg3spmc instance (unused).
@@ -464,14 +496,14 @@ void _tg3spmc_queue_tx(struct tg3spmc *self)
 {
 	struct _tg3spmc_io *i = &self->_io;
 
-	_tg3spmc_encode_frame_h368(self, &i->tx.frames[0]);
-	_tg3spmc_encode_frame_h42C(self, &i->tx.frames[1]);
+	_tg3spmc_encode_frame_h42C(self, &i->tx.frames[0]);
 
 	if (i->tx.enable_broadcast) {
 		i->tx.count = 3u;
-		_tg3spmc_encode_frame_h45C(self, &i->tx.frames[2]);
+		_tg3spmc_encode_frame_h45C(self, &i->tx.frames[1]);
+		_tg3spmc_encode_frame_h368(self, &i->tx.frames[2]);
 	} else {
-		i->tx.count = 2u;
+		i->tx.count = 1u;
 	}
 }
 
@@ -491,11 +523,13 @@ bool _tg3spmc_detected_errors_during_charge(struct tg3spmc *self)
 	bool fault = false;
 
 	if (i->rx.timer_ms >= TG3SPMC_CONST_CAN_RX_TIMEOUT_MS) {
+		self->fault_cause = 1u; /* TODO no magic numbers*/
 		i->rx.has_frames = false;
 		fault = true;
 	}
 
 	if ((i->rx.has_frames) && (v->fault == true)) {
+		self->fault_cause = 2u;
 		fault = true;
 	}
 
@@ -524,6 +558,8 @@ void tg3spmc_init(struct tg3spmc *self, uint8_t id)
 	self->_state = (uint8_t)_TG3SPMC_STATE_CONFIG;
 
 	self->_timer_ms = 0u;
+
+	self->fault_cause = 0u;
 
 	self->_hold_start = true;
 
@@ -733,7 +769,7 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		/* Increment TX timer */
 		i->tx.timer_ms += delta_time_ms;
 
-		if (self->_timer_ms < TG3SPMC_CONST_CAN_TX_PERIOD_MS) {
+		if (self->_timer_ms < TG3SPMC_CONST_BOOT_TIME_MS) {
 			break;
 		}
 
@@ -799,6 +835,7 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 
 		/* _TG3SPMC_STATE_CONFIG init */
 		i->rx.has_frames = false;
+		i->rx.recv_flags = 0u;
 
 		break;
 

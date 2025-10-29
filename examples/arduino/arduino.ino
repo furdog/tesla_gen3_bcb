@@ -199,7 +199,15 @@ void loop()
 
 	/* Log some stuff every 1000ms, + log events */
 	if (ev != 0) {
-		printf("TG3SPMC_EVENT_%s\n", tg3spmc_get_event_name(ev));
+		printf("TG3SPMC_EVENT_%s", tg3spmc_get_event_name(ev));
+	}
+
+	if (ev == TG3SPMC_EVENT_FAULT) {
+		printf(", CAUSE: %u", mod1.fault_cause);
+	}
+
+	if (ev != 0) {
+		printf("\n");
 	}
 
 	log_timer_ms += delta_time_ms;

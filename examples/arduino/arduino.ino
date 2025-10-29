@@ -157,8 +157,8 @@ void setup()
 
 	/* Tesla module config */
 	config.rated_voltage_ac_V = 240.0f;
-	config.voltage_dc_V       = 380;
-	config.current_ac_A       = 0.0f;
+	config.voltage_dc_V       = 370;
+	config.current_ac_A       = 1.0f;
 
 	/* Init module 1 (0, *1, 2) */
 	tg3spmc_init(&mod1, 1u);
@@ -203,8 +203,8 @@ void loop()
 	}
 
 	log_timer_ms += delta_time_ms;
-	if (log_timer_ms >= 1000u) {
-		log_timer_ms -= 1000u;
+	if (log_timer_ms >= 500u) {
+		log_timer_ms -= 500u;
 
 		/* TODO: read of private member MUST be avoided
 		 * possible solutions:

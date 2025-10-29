@@ -62,7 +62,7 @@ enum _tg3spmc_state {
  * decoded from CAN messages.
  */
 enum tg3spmc_status_flag {
-	TG3SPMC_STATUS_FLAG_EN       = 1u,  /**< Enable flag. */
+	TG3SPMC_STATUS_FLAG_EN       = 1u,  /**< chgen_out feedback flag. */
 	TG3SPMC_STATUS_FLAG_UNKNOWN2 = 2u,  /**< Unknown status bit 2. */
 	TG3SPMC_STATUS_FLAG_UNKNOWN3 = 4u,  /**< Unknown status bit 3. */
 	TG3SPMC_STATUS_FLAG_UNKNOWN4 = 8u,  /**< Unknown status bit 4. */
@@ -74,7 +74,7 @@ enum tg3spmc_status_flag {
 
 	/**
 	 * @brief Some internal flag (Toggles 3 times when no HVDC present).
-	 * Final state is 0
+	 * Final state is 1. Always 0 if no charge mode enabled? TODO survey
 	 */
 	TG3SPMC_STATUS_FLAG_UNKNOWN8 = 128u
 };
@@ -174,7 +174,7 @@ struct tg3spmc_vars {
 
 	/** Flag: true if AC voltage is present. */
 	bool ac_present;
-	/** Flag: true if the module's enable signal is present. */
+	/** Flag: true if module reports it's enabled. */
 	bool en_present;
 	/** Flag: true if the module reports a fault. */
 	bool fault;
@@ -198,6 +198,10 @@ struct tg3spmc
 
 	/** General purpose timer for state transitions and timeouts (ms). */
 	uint32_t _timer_ms;
+
+	/** Hold charger start when in RUNNING state.
+	 *  Necessary to pass initial setup to the charger */
+	bool _hold_start;
 
 	/** Input/Output hardware interface structure. */
 	struct _tg3spmc_io     _io;
@@ -263,9 +267,27 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		v->current_ac_A =
 			(((f->data[6] & 0x0003u) << 8u) | f->data[5]) >> 1u;
 
+		/* data[0] is somehow related with AC voltage */
+
+		/* data[2] is likely a 6bit flags
+		 * remaining two MSB bits and data[3] store
+		 * 10bit signed integer of unknown purpose.
+		 * It's somehow connected with AC voltage */
 		v->ac_present = (v->voltage_ac_V > 70u)      ? true : false;
+
+		/* Even though EN signal is present,
+		 * this does not work in current firmware.
+		 * Probably module is not enabled at all
+		 * TODO rename */
 		v->en_present = ((f->data[2] & 0x02u) != 0u) ? true : false;
+
 		v->fault      = ((f->data[2] & 0x04u) != 0u) ? true : false;
+
+		/* Bit 5 must be present and data[0] must change,
+		 * but it doesn't by unknown reason
+		 * (this firmware does not work at this point) */
+
+		/* When bit 4 is present - AC current flow starts */
 		break;
 	case 0x217u:
 		/* Status Message: Raw status byte. */
@@ -296,6 +318,32 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		/* Temp Msg 2: Current limit due to temperature. */
 		v->current_limit_due_temp_A = f->data[0] * 0.234375;
 		break;
+
+	case 0x347:
+		/* 1000ms period
+		 * byte[2] goes 0x80 shortly when there's
+		 * some distruption in AC supply
+		 * (lose or bad connection to AC socket (sparks)) */
+		break;
+
+	case 0x537:
+		/* 900ms period
+		 * Probably fragmented CAN message
+		 * byte[0] is an index of fragment
+		 * Range: 0x0A - 0x14
+		 * Observed sequence: 0A 0B 0D 0E 0F 10 11 12 13 14
+		 * */
+		break;
+
+	case 0x717:
+		/* 100ms period
+		 * Probably fragmented CAN message
+		 * byte[0] is an index of fragment (range: 0x01 - 0x1C)
+		 * Observed sequence: 01 02 04 05 06 07 08 09 0A 0B 0C 0E 0F
+		 * 		      10 11 12 13 14 16 17 18 19 1A 1B 1C
+		 */
+		break;
+
 	default:
 		valid_frame = false;
 		break;
@@ -328,10 +376,11 @@ void _tg3spmc_encode_frame_h45C(struct tg3spmc *self,
 	f->data[0] = (raw_set_voltage_dc_V & 0x00FFu) >> 0u;
 	f->data[1] = (raw_set_voltage_dc_V & 0xFF00u) >> 8u;
 
-	if (self->_state == (uint8_t)_TG3SPMC_STATE_RUNNING) {
-		f->data[3] = 0x2e; /* State-dependent control byte */
+	if (self->_state == (uint8_t)_TG3SPMC_STATE_RUNNING &&
+	    !self->_hold_start) {
+		f->data[3] = 0x2E; /* State-dependent control byte */
 	} else {
-		f->data[3] = 0x0e; /* State-dependent control byte */
+		f->data[3] = 0x0E; /* State-dependent control byte */
 	}
 
 	/* Unknown, static data */
@@ -339,7 +388,7 @@ void _tg3spmc_encode_frame_h45C(struct tg3spmc *self,
 	f->data[4] = 0x00;
 	f->data[5] = 0x00;
 	f->data[6] = 0x90;
-	f->data[7] = 0x8c;
+	f->data[7] = 0x8C;
 }
 
 /**
@@ -363,7 +412,8 @@ void _tg3spmc_encode_frame_h42C(struct tg3spmc *self,
 	f->data[2] = (raw_set_current_ac_A & 0x00FFu) >> 0u;
 	f->data[3] = (raw_set_current_ac_A & 0xFF00u) >> 8u;
 
-	if (self->_state == (uint8_t)_TG3SPMC_STATE_RUNNING) {
+	if (self->_state == (uint8_t)_TG3SPMC_STATE_RUNNING &&
+	    !self->_hold_start) {
 		f->data[1] = 0xBB; /* State-dependent control byte */
 		/* FE - normal operation. FF - clear faults. */
 		f->data[4] = 0xFE;
@@ -474,6 +524,8 @@ void tg3spmc_init(struct tg3spmc *self, uint8_t id)
 	self->_state = (uint8_t)_TG3SPMC_STATE_CONFIG;
 
 	self->_timer_ms = 0u;
+
+	self->_hold_start = true;
 
 	/* IO */
 	i->pwron_out = false;
@@ -692,13 +744,24 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 		i->chgen_out = true;
 
 		/* _TG3SPMC_STATE_RUNNING init */
-		i->rx.timer_ms   = 0u;
-		i->rx.has_frames = false;
+		i->rx.timer_ms    = 0u;
+		i->rx.has_frames  = false;
+		self->_timer_ms   = 0u;
+		self->_hold_start = true;
 
 		break;
 
 	/* We send messages and validate charging process in this state */
 	case _TG3SPMC_STATE_RUNNING:
+		self->_timer_ms += delta_time_ms;
+
+		/* Wait 1000ms before setting initial setup flag to false
+		 * TODO we must somehow detect that charger mode is ready to
+		 * provide output. TODO no magic numbers */
+		if (self->_timer_ms > 1000u) {
+			self->_hold_start = false;
+		}
+
 		i->tx.timer_ms += delta_time_ms;
 		i->rx.timer_ms += delta_time_ms;
 

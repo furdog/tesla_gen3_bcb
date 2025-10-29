@@ -76,7 +76,12 @@ void tg3spmc_test_tx(struct tg3spmc *self)
 
 	assert(tg3spmc_get_tx_frame(self, &f) == false);
 	assert(tg3spmc_step(self, 0) == TG3SPMC_EVENT_NONE);
+
+	/* Broadcast goes first */
 	assert(tg3spmc_get_tx_frame(self, &f) == true);
+	assert(self->_hold_start == true);
+	assert(f.data[3] == 0x0E); /* Todo check for 0x2E */
+
 	assert(tg3spmc_get_tx_frame(self, &f) == true);
 	assert(tg3spmc_get_tx_frame(self, &f) == true);
 	assert(tg3spmc_get_tx_frame(self, &f) == false);

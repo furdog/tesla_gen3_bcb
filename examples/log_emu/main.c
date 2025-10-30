@@ -113,7 +113,7 @@ int main()
 	struct canary_log_reader c_inst;
 	uint32_t last_msg_time_us = 0u;
 
-	FILE *file = fopen("../../research/common_20251029_154131_tesla_bcb"
+	FILE *file = fopen("common_20251029_154131_tesla_bcb"
 			   "_start_and_230_ac_387_DC_working_4A"
 			   "_but_unstable_as_hell.txt", "r");
 

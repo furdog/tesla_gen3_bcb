@@ -157,8 +157,8 @@ void setup()
 
 	/* Tesla module config */
 	config.rated_voltage_ac_V = 240.0f;
-	config.voltage_dc_V       = 370;
-	config.current_ac_A       = 1.0f;
+	config.voltage_dc_V       = 390;
+	config.current_ac_A       = 4.0f;
 
 	/* Init module 1 (0, *1, 2) */
 	tg3spmc_init(&mod1, 1u);

@@ -20,3 +20,6 @@ This project is actively work in progress and not ready for any usage yet.
 
 Please check https://github.com/damienmaguire/Tesla-Charger .
 This project is primarily based on Damien's codebase and knowledge.
+
+You can also check https://github.com/jsphuebner/stm32-teslacharger
+as alternative (similar software)

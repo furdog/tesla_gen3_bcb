@@ -68,7 +68,7 @@ bool tg3spmc_log(struct tg3spmc *self, char *buf, size_t len)
 		/* Line 1: Basic Module Info & Controls */
 		"|ID:%u       |Pwr:%-3s  |Chg:%-3s    |State:0x%02X |\n"
 		/* Line 2: Voltage/Current DC & AC */
-		"|V-DC:%5.1fV|V-AC:%3uV|I-DC:%5.1fA|I-AC:%4uA |\n"
+		"|V-DC:%5.1fV|V-AC:%3uV|I-DC:%5.1fA|I-AC:%5.1fA|\n"
 		/* Line 3: Temperature Sensors and Limits */
 		"|T1:%+5dC  |T2:%+5dC|Tgt:%+5dC |Lim:%5.1fA |\n"
 		/* Line 4: Flags and Status (No newline on last line) */
@@ -84,7 +84,7 @@ bool tg3spmc_log(struct tg3spmc *self, char *buf, size_t len)
 		(double)v->voltage_dc_V,
 		(unsigned int)v->voltage_ac_V,
 		(double)v->current_dc_A,
-		(unsigned int)v->current_ac_A,
+		(double)v->current_ac_A,
 
 		/* Line 3 */
 		(int)v->temp1_C,

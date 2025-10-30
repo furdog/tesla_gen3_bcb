@@ -164,10 +164,10 @@ struct tg3spmc_config {
  * measurements, and health.
  */
 struct tg3spmc_vars {
-	float    voltage_dc_V; /**< Measured DC output voltage (V). */
-	uint16_t voltage_ac_V; /**< Measured AC input voltage (V). */
-	float    current_dc_A; /**< Measured DC output current (A). */
-	uint16_t current_ac_A; /**< Measured AC input current (A). */
+	float   voltage_dc_V; /**< Measured DC output voltage (V). */
+	uint8_t voltage_ac_V; /**< Measured AC input voltage (V). */
+	float   current_dc_A; /**< Measured DC output current (A). */
+	float   current_ac_A; /**< Measured AC input current (A). */
 
 	/** Target inlet coolant temperature (C). */
 	int16_t inlet_target_temp_C;
@@ -277,8 +277,15 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 	case 0x207u:
 		/* AC Feedback: AC voltage, AC current, and status flags. */
 		v->voltage_ac_V = f->data[1];
-		v->current_ac_A =
-			(((f->data[6] & 0x0003u) << 8u) | f->data[5]) >> 1u;
+
+		/* Instead of 2/3/10 ratio (0.06666) which is used in
+		 * original software, i assume it is more likely
+		 * (peak_current/sqrt(2))/10, which is often used for IRMS.
+		 * So, it looks like the raw value is actually
+		 * (peak_current_A * 10) which makes more sense to transmit.
+		 * It also matches precisely with experimental measurements. */
+		v->current_ac_A = 0.070710678118f * /* 0.1/sqrt(2) */
+			((((f->data[6] & 0x0003u) << 8u) | f->data[5]) >> 1u);
 
 		/* data[0] is somehow related with AC voltage */
 
@@ -314,18 +321,13 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		i->rx.recv_flags |= (1u << 1u);
 		break;
 	case 0x227u:
-		/* Approximate fractional representation: 1/96 or 2/192
-		 * might be also 1 / 3*2^5 or 12 / 9*2^7
-		 * It's probably two consequent divisions, 1/3/32 */
-		/* DC Feedback: DC voltage and DC current. */
+		/* I highly doubt that they transmit actual ADC data,
+		 * But these scalars seems to be close to real measurements. */
 		v->voltage_dc_V =
-			((f->data[3] << 8u) | f->data[2]) * 0.0105286;
+			((f->data[3] << 8u) | f->data[2]) * 700.0f/0xFFFF;
 
-		/* Approximate fractional representation 1/1192 or 1/1152
-		 * might be also 1 / 9*2^7
-		 * It's probably two consequent divisions, 1/9/128 */
 		v->current_dc_A =
-			((f->data[5] << 8u) | f->data[4]) * 0.000839233;
+			((f->data[5] << 8u) | f->data[4]) * 50.0f/0xFFFF;
 
 		i->rx.recv_flags |= (1u << 2u);
 		break;
@@ -578,7 +580,7 @@ void tg3spmc_init(struct tg3spmc *self, uint8_t id)
 	v->voltage_dc_V = 0.0f;
 	v->voltage_ac_V = 0u;
 	v->current_dc_A = 0.0f;
-	v->current_ac_A = 0u;
+	v->current_ac_A = 0.0f;
 
 	v->inlet_target_temp_C      = 0;
 	v->current_limit_due_temp_A = 0.0f;

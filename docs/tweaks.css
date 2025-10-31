@@ -2,7 +2,7 @@
 	display: none;
 }
 
-div.image img {
+img.inline {
 	max-width: 100%;
 	height: auto;
 }

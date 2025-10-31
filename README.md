@@ -12,17 +12,70 @@ You can also check https://github.com/jsphuebner/stm32-teslacharger
 as alternative (similar software)
 
 ## Overview
+![image](media/module.jpg)
+(top view of single phase module board within Tesla BCB)
 
 The `tg3spmc` library provides a **hardware-agnostic** logic layer for controlling a **Tesla GEN3 Single Phase Module** (tg3spmc), which is an internal component of the Tesla GEN3 Battery Controller Board (BCB).
 
 This library implements the module's state machine, handles the encoding and decoding of **CAN 2.0 frames**, and manages the module's control signals (power on, charge enable).
 
 **Key Features:**
+  * **Hardware agnostic:** Absolute ZERO hardware-dependend code (except the examples)
+  * **MISRA-C compliant:** Integration providen by cppcheck (100% compliance achieved for core library)
+  * **Single header:** Makes integration with other projects super simple and seamless
+  * **Pure C:** Pure C, specifically ANSI(C89) standard
+  * **Automated tests:** Automatically tests main features (not TDD though, but aimed to be in the future)
+  * **Documentation:** It is not really well made yet, but it's on the priority!
+  * **Designed by rule of 10:** No recursion, dynamic memory allocations, callbacks, etc
+  * **Deterministic:** Designed with constant time execution in mind
+  * **GitHub actions:** Automated checks and doxygen generation
 
-  * **Logical Control:** Implements the core state machine required to safely power on and enable charging.
-  * **Hardware Abstraction:** The core logic is completely separate from the actual hardware interface (pins, CAN bus drivers).
-  * **CAN Protocol Handling:** Manages the timing and content for sending (Tx) and receiving (Rx) the specific CAN messages required by the Tesla module.
-  * **Multi-Module Support:** Designed to handle multiple modules (up to 3) within a single charger system.
+**Pitfalls:**
+  * **Reverse engineering:** This is not an official firmware :(
+  * **WIP:** Actively work in progress (not for production) 
+  * **Not certified:** Use it at own risk
+
+## Details
+![image](media/code.jpg)
+
+Board (PCB) Design code: FAB 1034376-00-D REV-01
+
+Specific part code (QR): p1045483-00-d:REV03:S0317AS0001706
+
+Tesla GEN3 Single Phase Module Board uses these control chips:
+- MCU:  TMS320 f28035pag0   (The big one in center of the board)
+- CPLD: ALTERA 5m160ze64a5n (Smaller piece, just near the MCU)
+
+It's likely that MCU used for general complex tasks and communication while
+CPLD is used for time-critical peripheral control.
+
+I'd like to document and discover signals for every pin,
+but thats gonna take some time and wish (which i do not have at the moment).
+There are really more stuff to discover that may to drop some shades
+onto the architecture of the module, but unfortunately i am not the expert
+in the field of electronics, so any external help is highly appreciated.
+
+There are generally 3 or 2 similar boards in single BCB.
+We've just extracted other board(s).
+
+![image](media/fuse.jpg)
+(There are two fuses at the AC input side at each board)
+
+For implementing my own controller i have used CAN filter board. That is used
+for filtering BMS messages. It's not documented here and i do not see any
+neccessarity because it's simple board which consists of:
+- 12v->5v DCDC converter
+- two TJA-1030 (or TJA-1050) CAN2.0 transcievers (dual CAN)
+- Mount for ESP32-C6 board which has two native CAN2.0(TWAI) controllers
+- ESP32-C6 board
+
+I don't recomend to use specifically `Super Mini` board, because it has
+serious PCB flaws.
+
+For testing purposes i only use single built-in CAN2.0(TWAI) controller.
+
+![image](media/can_filter.jpg)
+(CAN2.0 filter)
 
 ## Licensing
 This repository contains code that is the original creation of furdog and licensed under MIT License.

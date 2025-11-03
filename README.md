@@ -12,7 +12,7 @@ The project is actively work in progress and not ready for any usage yet.
 * [Alternative Tesla charger software](https://github.com/jsphuebner/stm32-teslacharger) - Another piece of work, similar to Damien's software
 
 ## Project overview
-The `tg3spmc` library provides a **hardware-agnostic** logic layer for controlling a **Tesla GEN3 Single Phase Module** (tg3spmc), which is an internal component of the Tesla GEN3 Battery Controller Board (BCB).
+The `tg3spmc` library provides a **hardware-agnostic** logic layer for controlling a **Tesla GEN3 Single Phase Module**, which is an internal component of the Tesla GEN3 Battery Controller Board (BCB).
 
 This library implements the module's state machine, handles the encoding and decoding of **CAN 2.0 frames**, and manages the module's control signals (power on, charge enable).
 
@@ -72,7 +72,7 @@ but thats gonna take some time and wish (which i do not have at the moment).
 
 ### Power Components
 ![image](media/fuse.jpg)
-- **[Fig. 3]:** *There are two fuses at the AC input side (Fig. 1 rightmost side of the module)*
+- **[Fig. 3]:** *There are two fuses at the AC input side (see **Fig. 1** rightmost side of the module)*
 
 ### Peripherals and Pinout
 Our custom control hardware will use the 8 pin interface *(see **Fig. 4**)* to talk with the module.
@@ -95,30 +95,56 @@ The 8 pin interface is located at the leftmost side of the board *(see **Fig. 1*
 >Do not forget to add a **120Ω terminating resistor** between the **CANH/CANL** pins.
 
 **⚠️ IMPORTANT NOTE:** you must disconnect original control board from the module.
-Either desolder it, or cut. We do not need it, since we will use our own.
-The original control board is connected to all 3 or 2 modules. You can use all of them.
+Either desolder it, or cut, as we do not need it, since custom control board will be used.
+The original control board connected to each single phase module via 8 pin interface.
 ![image](media/pinout.jpg)
 - **[Fig. 4]:** *8 pin interface*
 
+
+---
+
+### Communication details
+Each single phase module (we have 2 or 3 of them within single BCB) has it's own address
+which is expressed by CAN frame ID and encoded as: **BASE_ID + (MODULE_ID * SPACING)**
+
+It's easy to deduce to which module message belongs. For example if we receive frame which contain various measurements for AC
+It can be encoded in three different id's, each one of represents specific module:
+* 0x207u - AC measurements module id 0 (0x207u + (0u * 2u))
+* 0x209u - AC measurements module id 1 (0x207u + (1u * 2u))
+* 0x20Bu - AC measurements module id 2 (0x207u + (2u * 2u))
+
+We already might have guessed that the BASE_ID for this specific message (AC measurements) is 0x207u and spacing is 2u.
+
+Remember there are only three modules within single BCB. The ID seems to be burnt into a firmware and there's
+no known known way to change it (yet).
+
+There are some messages that are considered BROADCAST.
+It's silly to send broadcast message within this software, because it has side effects that may interfere with other modules.
+And it also breaks scope of responsibility (single phase module controller should not "broadcast" and control other modules in any way).
+But i have decided that without having broadcast message, this library won't be any functional or useful at all by itself, so i decided
+to keep it as is. If there's need to work with multiple modules at once, the API provides optional method to disable broadcast.
+
 ## Module control hardware
-For implementing controller hardware i have used custom CAN filter board.
+For implementing control hardware i have used custom CAN filter board.
 It's not documented here, but i'll give a short description.
 Based on that, you'll be able to design your own, custom board:
 - 12v->5v DCDC converter
 - two TJA-1030 (or TJA-1050) CAN2.0 transcievers (dual CAN)
 - Mount for ESP32-C6 board which has two native CAN2.0(TWAI) controllers
 - ESP32-C6 board
+- Free GPIO pins, at least 2 (6 for all three modules is MAX).
 
 I don't recomend to use specifically `Super Mini` board, because it has
 serious PCB flaws.
 
 For testing purposes i only use single built-in CAN2.0(TWAI) controller,
-And two GPIO2 ports to provide PWR and CHG signals.
+And two GPIO ports to provide PWR and CHG signals.
 
 ![image](media/can_filter.jpg)
 - **[Fig. 5]:** *CAN2.0 filter*
 
-More description and documentation about examples use will come soon.
+## How to use
+Coming soon (look for examples atm)
 
 ## Licensing
 This repository contains code that is the original creation of furdog and licensed under MIT License.

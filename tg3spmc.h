@@ -295,22 +295,21 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		 * It's somehow connected with AC voltage */
 		v->ac_present = (v->voltage_ac_V > 70u)      ? true : false;
 
-		/* Even though EN signal is present,
-		 * this does not work in current firmware.
-		 * Probably module is not enabled at all
-		 * TODO rename */
+		/* Has no relationship with EN signal, it's probably,
+		 * module's own EN flag. TODO rename */
 		v->en_present = ((f->data[2] & 0x02u) != 0u) ? true : false;
 
 		v->fault      = ((f->data[2] & 0x04u) != 0u) ? true : false;
 
-		/* Bit 6 present when there is a HVDC, then data[0] grows */
+		/* Bit 6 present when there is a HVDC */
 		/* Bit 5 is present after some time if 0x42C frame was sent
 		 * After bit 5 is present, status bit 5 goes true too
 		 *
 		 * It looks like bits 5 and 6 are mapped to
-		 * status bits somehow! */
-
-		/* When bit 4 is present - AC current flow starts */
+		 * status bits somehow!
+		 * When bit 4 is present - AC current flow starts
+		 *
+		 * TODO confirm all of this */
 
 		i->rx.recv_flags |= (1u << 0u);
 		break;

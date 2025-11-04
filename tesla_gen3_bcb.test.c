@@ -1,20 +1,12 @@
+/*
+ * This file is derived from knowledge and reverse-engineered data originating
+ * from the Tesla Charger Control Program (2017-2019) by T de Bree, D. Maguire,
+ * and C. Kidder, available under the GPL-3.0 license
+ * https://github.com/damienmaguire/Tesla-Charger
+ */
+
 #include "tg3spmc.h"
 #include "tg3spmc.logger.h"
-
-/* Random message from logs: */
-/*
-00000207,false,Rx,1,8,00,00,00,00,C8,00,04,00,
-00000217,false,Rx,1,8,00,00,01,FC,9C,02,00,00,
-00000227,false,Rx,1,8,00,00,1C,7F,03,00,1F,C5,
-00000237,false,Rx,1,8,3C,41,00,00,00,00,00,00,
-00000247,false,Rx,1,8,44,7D,08,02,00,00,20,00,
-
-69992088,00000217,false,Rx,1,8,02,00,01,FC,9C,02,00,04,
-70082412,00000207,false,Rx,1,8,00,00,00,00,C8,00,04,00,
-70082660,00000227,false,Rx,1,8,00,00,00,00,00,00,1F,C5,
-70082907,00000237,false,Rx,1,8,3C,41,00,00,00,00,00,00,
-70083140,00000247,false,Rx,1,8,44,7D,6E,03,00,00,20,00,
-*/
 
 struct tg3spmc_frame test_frames[] = {
 	{0x207, 8, {0x00, 0x00, 0x00, 0x00, 0xC8, 0x00, 0x04, 0x00}},

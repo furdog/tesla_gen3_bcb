@@ -14,7 +14,7 @@ This page is available in [DOXYGEN](https://furdog.github.io/tg3spmc/) format
 The project is on early development, but it already provides minimal functionality.
 
 ### Useful Resources 💡
-* [Project that was used as inspiration](https://github.com/damienmaguire/Tesla-Charger) - Damien's software for controlling Tesla charger
+* [Project that i have derived knowledge from](https://github.com/damienmaguire/Tesla-Charger) - Damien's software for controlling Tesla charger
 * [Openinverter page of the charger](https://openinverter.org/wiki/Tesla_Model_S/X_GEN3_Charger) - Gives broad description of the module
     >(⚠️Description of the internal module pins on the page is partially incorrect)
 * [Alternative Tesla charger software](https://github.com/jsphuebner/stm32-teslacharger) - Another piece of work, similar to Damien's software
@@ -280,20 +280,18 @@ not be coupled with main class directly. All init/update and encoding/decoding m
 - Main automata must be designed with DBC(design by contract) in mind to ensure correct logic.
 
 ## Licensing
-This repository contains code that is the original creation of furdog and licensed under MIT License.
-See the LICENSE file for details.
-This applies to the current version of the software.
-As the sole author, the project owner (furdog) reserves the right to change
-the license for future versions.
+This repository contains code that has knowledge and reverse-engineered data
+originating from the Tesla Charger Control Program (2017-2019) by:
+ * T de Bree
+ * D. Maguire,
+ * C. Kidder
 
-While the project is informed by general engineering knowledge and publicly available ideas,
-no copyrighted material or explicit source code from other authors has been incorporated.
-The content is asserted as original.
+available under the GPL-3.0 license
+https://github.com/damienmaguire/Tesla-Charger
 
 ## Contributions
-To maintain the flexibility to change the project's license in the future,
-contributions are **NOT** being **ACCEPTED** at this time.
-Though any suggestions, tips and insights are welcome.
+Contributions are **NOT** being **ACCEPTED** at this time.
+Bt any suggestions, tips and insights are welcome.
 
 ## Project Discussions
 To keep things organized and easy to follow, I’d really appreciate it if all questions, ideas, and issue reports stayed right here on this GitHub repository.

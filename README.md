@@ -250,6 +250,10 @@ will start HVDC 390V 4.0A output.
 
 I have ignored a lot of details, but you can view more detailed example at arduino(esp32c6) [example](https://github.com/furdog/tg3spmc/blob/main/examples/arduino/arduino.ino).
 
+## Known bugs
+Currently this implementation works, but i have noticed charging instability - it may randomly go into error. 
+I don't yet know why (maybe i did some errors in transmission logic, or got buggy module), but any insights are welcome.
+
 ## Licensing
 This repository contains code that is the original creation of furdog and licensed under MIT License.
 See the LICENSE file for details.

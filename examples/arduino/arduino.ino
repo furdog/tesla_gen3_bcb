@@ -118,7 +118,7 @@ void simple_twai_update(struct simple_twai *self)
 }
 
 /*****************************************************************************/
-struct simple_twai stw0;
+//struct simple_twai stw0;
 struct simple_twai stw1;
 
 /* Single Tesla one phase module */
@@ -144,9 +144,9 @@ void setup()
 	Serial.begin(921600);
 
 	/* ESP32C6 has two TWAI(CAN2.0) controllers */
-	stw0.id = 0;
-	stw0.tx = GPIO_NUM_13; /* Conflicts with USB */
-	stw0.rx = GPIO_NUM_12; /* Conflicts with USB */
+	//stw0.id = 0;
+	//stw0.tx = GPIO_NUM_13; /* Conflicts with USB */
+	//stw0.rx = GPIO_NUM_12; /* Conflicts with USB */
 
 	stw1.id = 1;
 	stw1.tx = GPIO_NUM_14;

@@ -1,10 +1,17 @@
 # Tesla GEN3 Single Phase Module Controller
+⚠️**DANGER:** **Do not set DC voltage under 200V! Or it MAY explode.**
+
+⚠️The author is not responsible for any damages done.
+
+⚠️This software is NOT considered safety critical,
+nor the author is competent enough to design such software. You have been warned!
+
 ![image](media/module.jpg)
 - **[Fig. 1]:** *Top view of single phase module within Tesla charger (BCB)*
 
 This page is available in [DOXYGEN](https://furdog.github.io/tg3spmc/) format
 ### WIP
-The project is actively work in progress and not ready for any usage yet.
+The project is on early development, but it already provides minimal functionality.
 
 ### Useful Resources 💡
 * [Project that was used as inspiration](https://github.com/damienmaguire/Tesla-Charger) - Damien's software for controlling Tesla charger
@@ -31,10 +38,11 @@ This library implements the module's state machine, handles the encoding and dec
   * **Documentated:** It is not really well made yet, but it's on the priority!
   * **GitHub actions:** Automated checks and doxygen generation
 
-**Pitfalls:**
+**Problems:**
+  * ⚠️**Do not set DC voltage under 200V!**
+  * ⚠️**Not certified for safe use:** Use it at own risk
   * **Reverse engineering:** This is not an official firmware :(
   * **WIP:** Actively work in progress (not for production) 
-  * **Not certified:** Use it at own risk
 
 ## Why?
 Damien's project aims specific hardware and specific setup. There are implementation of SAE J1772,
@@ -171,10 +179,10 @@ The library is implemented in OOP style, it has:
 The library also uses relative time units, instead of absolute timestamps. This means
 you have to pass not timestamps (for example "millis()" in arduino), but time passed since the last
 loop cycle. This approach have several advantages over absolute time units, for example:
-* Reliability - it's easier to count from zero, and easier to prevent overflow conditions
-* Readability - it's easy to setup timers, you only have to increment delta-time
+* Reliability - It's easier to count from zero, and naturally easier to prevent overflow conditions
+* Readability - Timers are super short, straightforward and really simple to read
 * Flexibility - Deltas are cool to manipulate, pause, slowdown, accelerate
-* Testability - Delta time is really easy to test!
+* Testability - Delta time is really easy to test and debug!
 
 The core state machine returns events, simple enum values(prefix: `TG3SPMC_EVENT_`), which indicate certain
 event user has to pay attention. There are no much events at the moment and their description
@@ -253,6 +261,23 @@ I have ignored a lot of details, but you can view more detailed example at ardui
 ## Known bugs
 Currently this implementation works, but i have noticed charging instability - it may randomly go into error. 
 I don't yet know why (maybe i did some errors in transmission logic, or got buggy module), but any insights are welcome.
+
+## TODO
+### Features
+- Add methods of starting and stopping. Currently there's no way
+to control current flow. Though zero current config can be passed, or control pins can be disabled forcefully
+- Add methods to detect the module ID
+
+### Safety
+- Limit DC voltage so it never goes beyond specific limits.
+- Feedback matters. The charger must be aware of module feedback a lot more
+- Redudancy, run at least three instances of single phase module and coordinate their output.
+(probably not a responsiblity of this software)
+
+### Design
+- `writer` and `reader` must represent separate units that are responsible for communication and
+not be coupled with main class directly. All init/update and encoding/decoding methods must be grouped accordingly.
+- Main automata must be designed with DBC(design by contract) in mind to ensure correct logic.
 
 ## Licensing
 This repository contains code that is the original creation of furdog and licensed under MIT License.

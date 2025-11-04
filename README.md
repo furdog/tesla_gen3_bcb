@@ -2,7 +2,7 @@
 ![image](media/module.jpg)
 - **[Fig. 1]:** *Top view of single phase module within Tesla charger (BCB)*
 
-This page is available in [DOXYGEN](https://furdog.github.io/tesla_gen3_bcb/) format
+This page is available in [DOXYGEN](https://furdog.github.io/tg3spmc/) format
 ### WIP
 The project is actively work in progress and not ready for any usage yet.
 
@@ -178,7 +178,7 @@ loop cycle. This approach have several advantages over absolute time units, for 
 
 The core state machine returns events, simple enum values(prefix: `TG3SPMC_EVENT_`), which indicate certain
 event user has to pay attention. There are no much events at the moment and their description
-can be found on official [doxygen](https://furdog.github.io/tesla_gen3_bcb/tg3spmc_8h.html) page.
+can be found on official [doxygen](https://furdog.github.io/tg3spmc/tg3spmc_8h.html) page.
 
 The library uses highly hierarchical naming conventions, for example: `TG3SPMC_EVENT_CONFIG_INVALID` or
 `tg3spmc_get_pwron_pin_state`, so it's easier to find objects with common or related purposes. Keep that on mind.
@@ -187,7 +187,7 @@ The library uses highly hierarchical naming conventions, for example: `TG3SPMC_E
 Currently there are not much of public API available, but it may be expanded in the future.
 There's also might be some redesign and refactor choices be made until stable version of the API.
 
-For detailed API description see [doxygen](https://furdog.github.io/tesla_gen3_bcb/tg3spmc_8h.html).
+For detailed API description see [doxygen](https://furdog.github.io/tg3spmc/tg3spmc_8h.html).
 
 ## How to use
 ### Config
@@ -248,7 +248,7 @@ digitalWrite(MOD_CHGEN_PIN, tg3spmc_get_chgen_pin_state(&mod));
 That's basically ALL we have to know about APi. At this point the charger module
 will start HVDC 390V 4.0A output.
 
-I have ignored a lot of details, but you can view more detailed example at arduino(esp32c6) [example](https://github.com/furdog/tesla_gen3_bcb/blob/main/examples/arduino/arduino.ino).
+I have ignored a lot of details, but you can view more detailed example at arduino(esp32c6) [example](https://github.com/furdog/tg3spmc/blob/main/examples/arduino/arduino.ino).
 
 ## Licensing
 This repository contains code that is the original creation of furdog and licensed under MIT License.

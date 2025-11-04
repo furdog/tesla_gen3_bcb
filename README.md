@@ -8,7 +8,8 @@ The project is actively work in progress and not ready for any usage yet.
 
 ### Useful Resources 💡
 * [Project that was used as inspiration](https://github.com/damienmaguire/Tesla-Charger) - Damien's software for controlling Tesla charger
-* [Openinverter page of the charger](https://openinverter.org/wiki/Tesla_Model_S/X_GEN3_Charger) - Gives broad description of the module  
+* [Openinverter page of the charger](https://openinverter.org/wiki/Tesla_Model_S/X_GEN3_Charger) - Gives broad description of the module
+    >(⚠️Description of the internal module pins on the page is partially incorrect)
 * [Alternative Tesla charger software](https://github.com/jsphuebner/stm32-teslacharger) - Another piece of work, similar to Damien's software
 
 ## Project overview
@@ -17,21 +18,35 @@ The `tg3spmc` library provides a **hardware-agnostic** logic layer for controlli
 This library implements the module's state machine, handles the encoding and decoding of **CAN 2.0 frames**, and manages the module's control signals (power on, charge enable).
 
 **Key Features:**
-  * **Hardware agnostic:** Absolute ZERO hardware-dependend code (except the examples)
-  * **Zero dependency:** No dependencies has been used except standart library
-  * **MISRA-C compliant:** Integration providen by cppcheck (100% compliance achieved for core library)
-  * **Single header:** Makes integration with other projects super simple and seamless
   * **Pure C:** Specifically ANSI(C89) standard, featuring linux kernel style formatting
-  * **Automated tests:** Automatically tests main features (not TDD though, but aimed to be in the future)
-  * **Documentation:** It is not really well made yet, but it's on the priority!
+  * **MISRA-C compliant:** Integration providen by cppcheck (100% compliance achieved for core library)
   * **Designed by rule of 10:** No recursion, dynamic memory allocations, callbacks, etc
   * **Deterministic:** Designed with constant time execution in mind
+  * **Hardware agnostic:** Absolute ZERO hardware-dependend code (except the examples)
+  * **Zero dependency:** No dependencies has been used except standart library
+  * **Object oriented:** Though written on C, the project tries to use handles and method-like functions.
+  * **Asynchronous:** Fully asynchronous API, zero delay
+  * **Automated tests:** Automatically tests main features (not TDD though, but aimed to be in the future)
+  * **Single header:** Makes integration with other projects super simple and seamless
+  * **Documentated:** It is not really well made yet, but it's on the priority!
   * **GitHub actions:** Automated checks and doxygen generation
 
 **Pitfalls:**
   * **Reverse engineering:** This is not an official firmware :(
   * **WIP:** Actively work in progress (not for production) 
   * **Not certified:** Use it at own risk
+
+## Why?
+Damien's project aims specific hardware and specific setup. There are implementation of SAE J1772,
+external CAN communication and other non-charger related stuff & features.
+All of that is written with little consideration in style, testablity and modularity.
+
+Damien's provides very fragmented knowledge or information.
+I have personally found his tutorials and videos unnecessarily long and really hard to follow.
+
+So i decided to write my own, "pure" implementation of tesla charger, aiming to control single module.
+There will be no additional features. There's exactly only core controlling logic packed into very 
+minimalist and straightforward API.
 
 ## Specific module used in the project
 | Description | Code |
@@ -142,6 +157,28 @@ And two GPIO ports to provide PWR and CHG signals.
 
 ![image](media/can_filter.jpg)
 - **[Fig. 5]:** *CAN2.0 filter*
+
+## Implementation details
+The library is implemented in OOP style, it has: 
+* main instance class(struct) - stores all the necessary data of the controller
+* methods(functions that take *self param) - pretty much all of the API implemented this way
+* Core finite state machine - a heart of the whole implementation
+* Input/output methods - since the whole API is hardware agnostic, it uses virtual IO instead
+* Other methods - init/config/getters/setters and various runtime methods
+
+The library also uses relative time units, instead of absolute timestamps. This means
+you have to pass not timestamps (for example "millis()" in arduino), but time passed since the last
+loop cycle. This approach have several advantages over absolute time units, for example:
+* Reliability - it's easier to count from zero, and easier to prevent overflow conditions
+* Readability - it's easy to setup timers, you only have to increment delta-time
+* Flexibility - Deltas are cool to manipulate, pause, slowdown, accelerate
+* Testability - Delta time is really easy to test!
+
+## API
+Currently there are not much of public API available, but it may be expanded in the future.
+There's also might be some redesign and refactor choices be made until stable version of the API.
+
+For detailed API description see [doxygen](https://furdog.github.io/tesla_gen3_bcb/tg3spmc_8h.html).
 
 ## How to use
 Coming soon (look for examples atm)

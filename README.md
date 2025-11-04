@@ -122,6 +122,8 @@ The original control board connected to each single phase module via 8 pin inter
 Each single phase module (we have 2 or 3 of them within single BCB) has it's own address
 which is expressed by CAN frame ID and encoded as: **BASE_ID + (MODULE_ID * SPACING)**
 
+The baud rate of CAN bus is typical for most EV and equals 500kbps
+
 It's easy to deduce to which module message belongs. For example if we receive frame which contain various measurements for AC
 It can be encoded in three different id's, each one of represents specific module:
 * 0x207u - AC measurements module id 0 (0x207u + (0u * 2u))
@@ -174,6 +176,13 @@ loop cycle. This approach have several advantages over absolute time units, for 
 * Flexibility - Deltas are cool to manipulate, pause, slowdown, accelerate
 * Testability - Delta time is really easy to test!
 
+The core state machine returns events, simple enum values(prefix: `TG3SPMC_EVENT_`), which indicate certain
+event user has to pay attention. There are no much events at the moment and their description
+can be found on official [doxygen](https://furdog.github.io/tesla_gen3_bcb/tg3spmc_8h.html) page.
+
+The library uses highly hierarchical naming conventions, for example: `TG3SPMC_EVENT_CONFIG_INVALID` or
+`tg3spmc_get_pwron_pin_state`, so it's easier to find objects with common or related purposes. Keep that on mind.
+
 ## API
 Currently there are not much of public API available, but it may be expanded in the future.
 There's also might be some redesign and refactor choices be made until stable version of the API.
@@ -181,7 +190,65 @@ There's also might be some redesign and refactor choices be made until stable ve
 For detailed API description see [doxygen](https://furdog.github.io/tesla_gen3_bcb/tg3spmc_8h.html).
 
 ## How to use
-Coming soon (look for examples atm)
+### Config
+First you have to declare and initialize the main controller instance `struct tg3spmc`.
+You can have as much instances as you want, though there are only 3 modules in general
+and you don't need more, but whatever...
+
+To initialize the struct, use init method:
+```C++
+static struct tg3spmc mod;
+uint8_t id = 0; /* Insert module ID here */
+
+tg3spmc_init (&mod, id);
+```
+Keep on mind that you have to know "id" of the module. It can be either 0, 1 or 2.
+The ID can be discovered by CAN probing. For that to be done you have to activate module manually.
+Set: 12v-in, pwr-in, and 5v-in, *(See **Fig. 4**)*, then probe CAN with any CAN sniffer at 500k rate.
+for more info, see [Communication details](#communication-details) section.
+Sorry there are no other discovery methods at the moment, though this will change in the future.
+
+Next you have to set config. For example (arduino):
+```C++
+static struct tg3spmc_config config;
+
+config.rated_voltage_ac_V = 240.0f; /* Your grid voltage */
+config.voltage_dc_V       = 390; /* Desired DC voltage, don't go under 200 */
+config.current_ac_A       = 4.0f; /* Desired AC current */
+
+tg3spmc_set_config(&mod, config);
+```
+That's basically all you have to do for configuration.
+
+---
+
+### Runtime
+Now comes the runtime part:
+```C++
+tg3spmc_step(&mod, delta_time_ms); /* delta_time_ms: time passed from previous loop cycle (ms) */
+```
+Call this in loop to update main state machine, optionally read the returned `TG3SPMC_EVENT_`.
+
+Next we have to do is to map virtual IO to real IO. For example, (arduino):
+```C++
+struct tg3spmc_frame f;
+
+if (tg3spmc_get_tx_frame(&mod, &f)) {
+	simple_twai_send(&stw, &f); /* It just sends CAN frame over esp32 TWAI */
+}
+
+if (simple_twai_recv(&stw, &f)) { /* It returns true and writes into &f if received a frame */
+	tg3spmc_put_rx_frame(&mod, &f);
+}
+
+/* Send signal to pwr-in and chg-in pins */
+digitalWrite(MOD_PWRON_PIN, tg3spmc_get_pwron_pin_state(&mod));
+digitalWrite(MOD_CHGEN_PIN, tg3spmc_get_chgen_pin_state(&mod));
+```
+That's basically ALL we have to know about APi. At this point the charger module
+will start HVDC 390V 4.0A output.
+
+I have ignored a lot of details, but you can view more detailed example at arduino(esp32c6) [example](https://github.com/furdog/tesla_gen3_bcb/blob/main/examples/arduino/arduino.ino).
 
 ## Licensing
 This repository contains code that is the original creation of furdog and licensed under MIT License.

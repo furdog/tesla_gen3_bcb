@@ -274,6 +274,11 @@ Having everything in one place makes it much easier for everyone to find informa
 So if you’d like to chat about the code, suggest improvements, or report a bug - please open an Issue right here on GitHub.
 Thanks for helping keep things tidy and transparent!
 
+## Project future
+Since i am solo developer, i can't promise anything.
+It's likely i won't be working with Tesla modules in near future, and at some point this project will efectively become a relic.
+So if you ever work on your own similar implementation or fork, please open an issue to inform other people (and me) about this.
+
 ## AI content
 This repository's core, is written and verified manually by the author (furdog).
 However, certain non-critical elements, such as:

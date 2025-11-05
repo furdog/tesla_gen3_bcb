@@ -18,7 +18,9 @@ misra: $(MISRA_SCRIPT)
 	# Setup MISRA
 	@$(MISRA_SCRIPT) setup
 	# Run MISRA check
-	@$(MISRA_SCRIPT) check $(HEADER_FILES)
+	@for file in $(HEADER_FILES); do \
+	    $(MISRA_SCRIPT) check $$file; \
+	done
 
 # Prerequisite for 'misra': ensure the MISRA repository is cloned
 $(MISRA_SCRIPT):

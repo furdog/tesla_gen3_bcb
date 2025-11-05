@@ -1,11 +1,29 @@
 /**
- * @file tg3spmc.h
+ * ```LICENSE
+ * Tesla GEN3 Single phase module controller
  *
- * This file is derived from knowledge and reverse-engineered data originating
- * from the Tesla Charger Control Program (2017-2019) by T de Bree, D. Maguire,
- * and C. Kidder, available under the GPL-3.0 license
- * https://github.com/damienmaguire/Tesla-Charger
+ * Copyright (C) 2025 furdog
+ * https://github.com/furdog/tg3spmc
+ *
+ * Knowledge derived from:
+ * Copyright (C) 2017-2019 T de Bree, D. Maguire, and C. Kidder
+ * https://github.com/damienmaguire/Tesla-charger
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * ```
  * 
+ * @file tg3spmc.h
  * @brief Tesla(t) GEN3(g3) Single(s) phase(p) module(m) controller(c): tg3spmc
  *
  * This file implements logic to control single phase module within Tesla GEN3

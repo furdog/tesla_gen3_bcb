@@ -48,6 +48,10 @@
  * (Proven experimentally) */
 #define TG3SPMC_CONST_BOOT_TIME_MS 1000u
 
+/** Minimum alloved DC voltage in volts */
+#define TG3SPMC_CONST_MIN_DC_VOLTAGE_V 250.0f
+
+
 /******************************************************************************
  * GENERIC
  *****************************************************************************/
@@ -630,6 +634,11 @@ void tg3spmc_set_config(struct tg3spmc *self,
 	struct tg3spmc_config *s = &self->_config;
 
 	*s = config;
+
+	/** Enforce valid values */
+	if (config.voltage_dc_V < TG3SPMC_CONST_MIN_DC_VOLTAGE_V) {
+		s->voltage_dc_V = TG3SPMC_CONST_MIN_DC_VOLTAGE_V;
+	}
 }
 
 /**
@@ -769,7 +778,7 @@ enum tg3spmc_event tg3spmc_step(struct tg3spmc *self,
 	case _TG3SPMC_STATE_CONFIG:
 		/* Validate config before proceed to the next state */
 		if ((s->rated_voltage_ac_V <= 0.0f) ||
-		    (s->voltage_dc_V <= 0.0f)) {
+		    (s->voltage_dc_V < TG3SPMC_CONST_MIN_DC_VOLTAGE_V)) {
 			ev = TG3SPMC_EVENT_CONFIG_INVALID;
 			break;
 		}

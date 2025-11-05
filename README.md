@@ -269,7 +269,7 @@ to control current flow. Though zero current config can be passed, or control pi
 - Add methods to detect the module ID
 
 ### Safety
-- Limit DC voltage so it never goes beyond specific limits.
+- Limit DC voltage so it never goes beyond specific limits. ``done for MIN voltage``
 - Feedback matters. The charger must be aware of module feedback a lot more
 - Redudancy, run at least three instances of single phase module and coordinate their output.
 (probably not a responsiblity of this software)

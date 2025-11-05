@@ -86,7 +86,8 @@ void loop()
 	}
 
 	if (ev == TG3SPMC_EVENT_FAULT) {
-		printf(", CAUSE: %u", mod1.fault_cause);
+		printf(", CAUSE: %s",
+		       tg3spmc_get_fault_cause_name(mod1.fault_cause));
 	}
 
 	if (ev != 0) {

@@ -47,6 +47,23 @@ const char *tg3spmc_get_event_name(uint8_t ev)
 	return ev_name;
 }
 
+const char *tg3spmc_get_fault_cause_name(uint8_t code)
+{
+	const char *name = "UNKNOWN";
+
+	const char *names[3u] = {
+		"NONE",
+		"RX_TIMEOUT",
+		"FAULT_FLAG",
+	};
+
+	if (code < 3u) {
+		name = names[code];
+	}
+
+	return name;
+}
+
 /*
  * @brief Logs the contents of the tg3spmc structure into a buffer with
  * 	visual alignment.

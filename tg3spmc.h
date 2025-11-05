@@ -65,6 +65,18 @@ struct tg3spmc_frame {
 };
 
 /******************************************************************************
+ * DEBUG
+ *****************************************************************************/
+/**
+ * @brief Fault cause code after module gets into fault.
+ */
+enum tg3spmc_fault_cause {
+	TG3SPMC_FAULT_CAUSE_NONE,       /**< No fault */
+	TG3SPMC_FAULT_CAUSE_RX_TIMEOUT, /**< Fault caused by RX timeout */
+	TG3SPMC_FAULT_CAUSE_FAULT_FLAG  /**< Fault caused by module flag */
+};
+
+/******************************************************************************
  * CLASS
  *****************************************************************************/
 /**
@@ -551,13 +563,13 @@ bool _tg3spmc_detected_errors_during_charge(struct tg3spmc *self)
 	bool fault = false;
 
 	if (i->rx.timer_ms >= TG3SPMC_CONST_CAN_RX_TIMEOUT_MS) {
-		self->fault_cause = 1u; /* TODO no magic numbers*/
+		self->fault_cause = TG3SPMC_FAULT_CAUSE_RX_TIMEOUT;
 		i->rx.has_frames = false;
 		fault = true;
 	}
 
 	if ((i->rx.has_frames) && (v->fault == true)) {
-		self->fault_cause = 2u;
+		self->fault_cause = TG3SPMC_FAULT_CAUSE_FAULT_FLAG;
 		fault = true;
 	}
 

@@ -332,20 +332,22 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 
 		i->rx.recv_flags |= (1u << 0u);
 		break;
-	case 0x217u:
+	case 0x217u: /* Status */
 		/* Status Message: Raw status byte. */
 		v->status = f->data[0];
 
 		i->rx.recv_flags |= (1u << 1u);
 		break;
-	case 0x227u:
+	case 0x227u: /* DC_vars */
 		/* I highly doubt that they transmit actual ADC data,
 		 * But these scalars seems to be close to real measurements. */
 		v->voltage_dc_V =
 			((f->data[3] << 8u) | f->data[2]) * 700.0f/0xFFFF;
+		/*mul = 0.01068131532768749523155565728237*/
 
 		v->current_dc_A =
 			((f->data[5] << 8u) | f->data[4]) * 50.0f/0xFFFF;
+		/*mul = 0.000762951094834821087968261234455*/
 
 		i->rx.recv_flags |= (1u << 2u);
 		break;

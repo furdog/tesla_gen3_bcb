@@ -81,7 +81,51 @@ BO_ 523 mod2_AC_params: 8 Vector__XXX
    SG_ unknown_flg8 : 51|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val3 : 52|12@1+ (1,0) [0|1] "" Vector__XXX
 
+BO_ 535 mod0_status: 8 Vector__XXX
+   SG_ flag_chgen_pin : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk2 : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk3 : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk4 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk5 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk6 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk7 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk8 : 7|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 537 mod1_status: 8 Vector__XXX
+   SG_ flag_chgen_pin : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk2 : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk3 : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk4 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk5 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk6 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk7 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk8 : 7|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 539 mod2_status: 8 Vector__XXX
+   SG_ flag_chgen_pin : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk2 : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk3 : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk4 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk5 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk6 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk7 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_unk8 : 7|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 551 mod0_DC_params: 8 Vector__XXX
+   SG_ voltage_V : 16|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
+   SG_ current_A : 32|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
+
+BO_ 553 mod1_DC_params: 8 Vector__XXX
+   SG_ voltage_V : 16|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
+   SG_ current_A : 32|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
+
+BO_ 555 mod2_DC_params: 8 Vector__XXX
+   SG_ voltage_V : 16|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
+   SG_ current_A : 32|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
+
 CM_ SG_ 519 unknown_val2 "period_14.5sec._Peaks_affect_AC_voltage_V_a_little";
+CM_ SG_ 551 voltage_V "mul=700.0f/0xFFFF";
+CM_ SG_ 551 current_A "mul=50.0f/0xFFFF";
 BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
 BA_DEF_ BO_ "GenMsgForegroundColor" STRING ;
 BA_DEF_ BO_ "matchingcriteria" INT 0 0;
@@ -96,8 +140,6 @@ BA_DEF_ BO_ "matchingcriteria" INT 0 0;
 BA_DEF_ BO_ "filterlabeling" INT 0 0;
 BA_DEF_DEF_ "GenMsgBackgroundColor" "#ffffff";
 BA_DEF_DEF_ "GenMsgForegroundColor" "#000000";
-BA_DEF_DEF_ "matchingcriteria" 0;
-BA_DEF_DEF_ "filterlabeling" 1;
 BA_DEF_DEF_ "matchingcriteria" 0;
 BA_DEF_DEF_ "filterlabeling" 1;
 BA_ "GenMsgForegroundColor" BO_ 519 "#000000";

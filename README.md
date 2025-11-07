@@ -149,6 +149,10 @@ And it also breaks scope of responsibility (single phase module controller shoul
 But i have decided that without having broadcast message, this library won't be any functional or useful at all by itself, so i decided
 to keep it as is. If there's need to work with multiple modules at once, the API provides optional method to disable broadcast.
 
+**UPDATE 07.11.2025:**
+- Added CAN .dbc, graphs, logs into savvyCAN directory, as well as
+README with discoveries listed
+
 ## Module control hardware
 For implementing control hardware i have used custom CAN filter board.
 It's not documented here, but i'll give a short description.
@@ -278,6 +282,7 @@ to control current flow. Though zero current config can be passed, or control pi
 - `writer` and `reader` must represent separate units that are responsible for communication and
 not be coupled with main class directly. All init/update and encoding/decoding methods must be grouped accordingly.
 - Main automata must be designed with DBC(design by contract) in mind to ensure correct logic.
+- Assign enum names for CAN message ID's, as well as create separate struct and enum sections for every frame.
 
 ## License
 ```

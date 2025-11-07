@@ -313,42 +313,22 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 
 	/* Generic for all three modules. */
 	switch (base_id) {
-	case 0x207u:
-		/* AC Feedback: AC voltage, AC current, and status flags. */
+	case 0x207u: /* AC_vars */
+		/* SG_ voltage_V : 8|8@1+ (1,0) [0|1] "" Vector__XXX */
 		v->voltage_ac_V = f->data[1];
+		v->ac_present = (v->voltage_ac_V > 70u)      ? true : false;
 
-		/* Instead of 2/3/10 ratio (0.06666) which is used in
-		 * original software, i assume it is more likely
-		 * (peak_current/sqrt(2))/10, which is often used for IRMS.
-		 * So, it looks like the raw value is actually
-		 * (peak_current_A * 10) which makes more sense to transmit.
-		 * It also matches precisely with experimental measurements. */
+		/* SG_ peak_current_A : 41|9@1+ (0.1,0) [0|1] "" Vector__XXX */
+		/* (peak_current_A * 10) */
 		v->current_ac_A = 0.070710678118f * /* 0.1/sqrt(2) */
 			((((f->data[6] & 0x0003u) << 8u) | f->data[5]) >> 1u);
 
-		/* data[0] is somehow related with AC voltage */
+   		/* TODO rename */
+		/* SG_ precharge_en : 17|1@1+ (1,0) [0|1] "" Vector__XXX */
+   		v->en_present = ((f->data[2] & 0x02u) != 0u) ? true : false;
 
-		/* data[2] is likely a 6bit flags
-		 * remaining two MSB bits and data[3] store
-		 * 10bit signed integer of unknown purpose.
-		 * It's somehow connected with AC voltage */
-		v->ac_present = (v->voltage_ac_V > 70u)      ? true : false;
-
-		/* Has no relationship with EN signal, it's probably,
-		 * module's own EN flag. TODO rename */
-		v->en_present = ((f->data[2] & 0x02u) != 0u) ? true : false;
-
-		v->fault      = ((f->data[2] & 0x04u) != 0u) ? true : false;
-
-		/* Bit 6 present when there is a HVDC */
-		/* Bit 5 is present after some time if 0x42C frame was sent
-		 * After bit 5 is present, status bit 5 goes true too
-		 *
-		 * It looks like bits 5 and 6 are mapped to
-		 * status bits somehow!
-		 * When bit 4 is present - AC current flow starts
-		 *
-		 * TODO confirm all of this */
+		/* SG_ fault_flag : 18|1@1+ (1,0) [0|1] "" Vector__XXX */
+		v->fault = ((f->data[2] & 0x04u) != 0u) ? true : false;
 
 		i->rx.recv_flags |= (1u << 0u);
 		break;

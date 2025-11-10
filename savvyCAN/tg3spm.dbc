@@ -37,15 +37,15 @@ BO_ 519 mod0_AC_params: 8 Vector__XXX
    SG_ unknown_val1 : 0|8@1+ (1,0) [0|1] "" Vector__XXX
    SG_ voltage_V : 8|8@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg1 : 16|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ precharge_en : 17|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ fault_flag : 18|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ powergate_en : 19|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart_allowed : 17|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_fault : 18|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_cur_out : 19|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg5 : 20|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg6 : 21|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val2 : 22|10@1- (1,0) [0|1] "" Vector__XXX
    SG_ peak_current_limit_A : 32|9@1+ (0.1,0) [0|1] "" Vector__XXX
    SG_ peak_current_A : 41|9@1+ (0.1,0) [0|1] "" Vector__XXX
-   SG_ unknown_flg7 : 50|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_charge_disallowed : 50|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg8 : 51|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val3 : 52|12@1+ (1,0) [0|1] "" Vector__XXX
 
@@ -53,15 +53,15 @@ BO_ 521 mod1_AC_params: 8 Vector__XXX
    SG_ unknown_val1 : 0|8@1+ (1,0) [0|1] "" Vector__XXX
    SG_ voltage_V : 8|8@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg1 : 16|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ precharge_en : 17|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ fault_flag : 18|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ powergate_en : 19|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart_allowed : 17|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_fault : 18|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_cur_out : 19|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg5 : 20|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg6 : 21|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val2 : 22|10@1- (1,0) [0|1] "" Vector__XXX
    SG_ peak_current_limit_A : 32|9@1+ (0.1,0) [0|1] "" Vector__XXX
    SG_ peak_current_A : 41|9@1+ (0.1,0) [0|1] "" Vector__XXX
-   SG_ unknown_flg7 : 50|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_charge_disallowed : 50|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg8 : 51|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val3 : 52|12@1+ (1,0) [0|1] "" Vector__XXX
 
@@ -69,15 +69,15 @@ BO_ 523 mod2_AC_params: 8 Vector__XXX
    SG_ unknown_val1 : 0|8@1+ (1,0) [0|1] "" Vector__XXX
    SG_ voltage_V : 8|8@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg1 : 16|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ precharge_en : 17|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ fault_flag : 18|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ powergate_en : 19|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart_allowed : 17|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_fault : 18|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_cur_out : 19|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg5 : 20|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg6 : 21|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val2 : 22|10@1- (1,0) [0|1] "" Vector__XXX
    SG_ peak_current_limit_A : 32|9@1+ (0.1,0) [0|1] "" Vector__XXX
    SG_ peak_current_A : 41|9@1+ (0.1,0) [0|1] "" Vector__XXX
-   SG_ unknown_flg7 : 50|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_charge_disallowed : 50|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_flg8 : 51|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ unknown_val3 : 52|12@1+ (1,0) [0|1] "" Vector__XXX
 
@@ -85,43 +85,49 @@ BO_ 535 mod0_status: 8 Vector__XXX
    SG_ flag_chgen_pin : 0|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk2 : 1|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk3 : 2|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk4 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk5 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk6 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk7 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart1 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart2 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart3 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_dc_relay_en : 6|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk8 : 7|1@1+ (1,0) [0|1] "" Vector__XXX
 
 BO_ 537 mod1_status: 8 Vector__XXX
    SG_ flag_chgen_pin : 0|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk2 : 1|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk3 : 2|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk4 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk5 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk6 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk7 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart1 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart2 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart3 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_dc_relay_en : 6|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk8 : 7|1@1+ (1,0) [0|1] "" Vector__XXX
 
 BO_ 539 mod2_status: 8 Vector__XXX
    SG_ flag_chgen_pin : 0|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk2 : 1|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk3 : 2|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk4 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk5 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk6 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
-   SG_ flag_unk7 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart1 : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart2 : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_softstart3 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ flag_dc_relay_en : 6|1@1+ (1,0) [0|1] "" Vector__XXX
    SG_ flag_unk8 : 7|1@1+ (1,0) [0|1] "" Vector__XXX
 
 BO_ 551 mod0_DC_params: 8 Vector__XXX
+   SG_ unknown_cap_val : 0|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
    SG_ voltage_V : 16|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
    SG_ current_A : 32|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
+   SG_ unknown_cap_target_val : 48|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
 
 BO_ 553 mod1_DC_params: 8 Vector__XXX
+   SG_ unknown_cap_val : 0|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
    SG_ voltage_V : 16|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
    SG_ current_A : 32|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
+   SG_ unknown_cap_target_val : 48|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
 
 BO_ 555 mod2_DC_params: 8 Vector__XXX
+   SG_ unknown_cap_val : 0|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
    SG_ voltage_V : 16|16@1+ (0.0106813,0) [0|1] "V" Vector__XXX
    SG_ current_A : 32|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
+   SG_ unknown_cap_target_val : 48|16@1+ (0.000762951,0) [0|1] "A" Vector__XXX
 
 CM_ SG_ 519 unknown_val2 "period_14.5sec._Peaks_affect_AC_voltage_V_a_little";
 CM_ SG_ 551 voltage_V "mul=700.0f/0xFFFF";

@@ -280,7 +280,7 @@ to control current flow. Though zero current config can be passed, or control pi
 
 ### Design
 - `writer` and `reader` must represent separate units that are responsible for communication and
-not be coupled with main class directly. All init/update and encoding/decoding methods must be grouped accordingly.
+not be coupled with main class directly. All init/update and encoding/decoding methods must be grouped accordingly. ``Partially done``
 - Main automata must be designed with DBC(design by contract) in mind to ensure correct logic.
 - Assign enum names for CAN message ID's, as well as create separate struct and enum sections for every frame.
 

@@ -53,7 +53,7 @@
 
 
 /******************************************************************************
- * GENERIC
+ * TG3SPMC GENERIC
  *****************************************************************************/
 /**
  * @brief CAN 2.0 Data Frame structure.
@@ -65,7 +65,7 @@ struct tg3spmc_frame {
 };
 
 /******************************************************************************
- * DEBUG
+ * TG3SPMC DEBUG
  *****************************************************************************/
 /**
  * @brief Fault cause code after module gets into fault.
@@ -77,7 +77,129 @@ enum tg3spmc_fault_cause {
 };
 
 /******************************************************************************
- * CLASS
+ * TG3SPM PRIVATE
+ *****************************************************************************/
+/**
+ * @brief Single phase module base ID enum
+ */
+enum _tg3spm_frame_base_id {
+	_TG3SPM_FRAME_BASE_ID_AC_PARAMS = 0x207u,
+	_TG3SPM_FRAME_BASE_ID_DC_PARAMS = 0x217u,
+	_TG3SPM_FRAME_BASE_ID_STATUS    = 0x227u,
+	_TG3SPM_FRAME_BASE_ID_SENSORS   = 0x237u,
+	_TG3SPM_FRAME_BASE_ID_LIMITS    = 0x247u
+};
+
+/** Enum for 6bit flags inside ac_params */
+enum _tg3spm_field_ac_params_flags0 {
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS0_UNKNOWN1          = 1u,
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS0_SOFTSTART_ALLOWED = 2u,
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS0_FAULT             = 4u,
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS0_CUR_OUT           = 8u,
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS0_UNKNOWN5          = 16u,
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS0_UNKNOWN6          = 32u
+};
+
+/** Enum for 2bit flags inside ac_params */
+enum _tg3spm_field_ac_params_flags1 {
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS1_CHARGE_DISALLOWED = 1u,
+	_TG3SPM_FIELD_AC_PARAMS_FLAGS1_UNKNOWN8          = 2u
+};
+
+/** Enum for 8bit flags inside status */
+enum _tg3spm_field_status_flags {
+	_TG3SPM_FIELD_STATUS_FLAGS_CHGEN_PIN_ON    = 1u,
+	_TG3SPM_FIELD_STATUS_FLAGS_UNKNOWN2        = 2u,
+	_TG3SPM_FIELD_STATUS_FLAGS_UNKNOWN3        = 4u,
+	_TG3SPM_FIELD_STATUS_FLAGS_UNKNOWN4        = 8u,
+	_TG3SPM_FIELD_STATUS_FLAGS_UNKNOWN5        = 16u,
+	_TG3SPM_FIELD_STATUS_FLAGS_AC_PRECHARGE_EN = 32u,
+	_TG3SPM_FIELD_STATUS_FLAGS_DC_PRECHARGE_EN = 64u,
+	_TG3SPM_FIELD_STATUS_FLAGS_UNKNOWN8        = 128u
+};
+
+/* TODO More defs and make use of it in code
+ * TODO Decoder functions for tg3spm messages must go here.
+ * Ensure every function provides raw and calculated values */
+
+/******************************************************************************
+ * TG3SPMC PRIVATE WRITER
+ *****************************************************************************/
+/**
+ * @brief Structure for writing CAN frames to the single phase module.
+ */
+struct _tg3spmc_writer
+{
+	/** Array to hold frames to be sent (max 3 at a time). */
+	struct tg3spmc_frame frames[3];
+
+	/** The number of valid frames currently in the array. */
+	uint8_t count;
+
+	/**
+	 * @brief Controls whether this instance sends broadcast
+	 * messages (0x45C).
+	 *
+	 * Only one instance in a multi-module system should
+	 * have this enabled.
+	 */
+	bool enable_broadcast;
+
+	/** Timer used for frame transmission scheduling. */
+	uint32_t timer_ms;
+};
+
+/**
+ * @brief Initializes the CAN writer structure.
+ * @param self Pointer to the tg3spmc_writer instance.
+ */
+void _tg3spmc_writer_init(struct _tg3spmc_writer *self)
+{
+	self->count = 0u;
+
+	self->enable_broadcast = true;
+
+	self->timer_ms = 0u;
+}
+
+/* TODO add more methods, more separation of concerns */
+
+/******************************************************************************
+ * TG3SPMC PRIVATE READER CLASS
+ *****************************************************************************/
+/**
+ * @brief Structure for handling received CAN frames from the module.
+ */
+struct _tg3spmc_reader
+{
+	/** Timer used for monitoring frame reception timeouts. */
+	uint32_t timer_ms;
+
+	/** Received frames (bits flagged) */
+	uint8_t recv_flags;
+
+	/** Flag indicating if new frames have been received in the step. */
+	bool has_frames;
+};
+
+/**
+ * @brief Initializes the CAN reader structure.
+ * @param self Pointer to the tg3spmc_reader instance.
+ */
+void _tg3spmc_reader_init(struct _tg3spmc_reader *self)
+{
+	/* TODO implement properly */
+	self->timer_ms = 0u;
+
+	self->recv_flags = 0u;
+
+	self->has_frames = false;
+}
+
+/* TODO add more methods, more separation of concerns */
+
+/******************************************************************************
+ * TG3SPMC CLASS
  *****************************************************************************/
 /**
  * @brief Events emitted by the module to indicate a change or occurrence.
@@ -124,50 +246,11 @@ enum tg3spmc_status_flag {
 };
 
 /**
- * @brief Structure for writing CAN frames to the single phase module.
- */
-struct _tg3spmc_writer
-{
-	/** Array to hold frames to be sent (max 3 at a time). */
-	struct tg3spmc_frame frames[3];
-
-	/** The number of valid frames currently in the array. */
-	uint8_t count;
-
-	/**
-	 * @brief Controls whether this instance sends broadcast
-	 * messages (0x45C).
-	 *
-	 * Only one instance in a multi-module system should
-	 * have this enabled.
-	 */
-	bool enable_broadcast;
-
-	/** Timer used for frame transmission scheduling. */
-	uint32_t timer_ms;
-};
-
-/**
- * @brief Structure for handling received CAN frames from the module.
- */
-struct _tg3spmc_reader
-{
-	/** Timer used for monitoring frame reception timeouts. */
-	uint32_t timer_ms;
-
-	/** Received frames (bits flagged) */
-	uint8_t recv_flags;
-
-	/** Flag indicating if new frames have been received in the step. */
-	bool has_frames;
-};
-
-/**
  * @brief Input/Output interface to be communicated with the outside world.
  * This is a logical representation; the user must map it to real
  * hardware (pins, CAN buses, etc.) via the tg3spmc API.
  */
-struct _tg3spmc_io {
+struct _tg3spmc_io { /* TODO rename to virtual_io or vio */
 	/** Module power ON control output (3.3v logic). */
 	bool pwron_out;
 
@@ -262,35 +345,8 @@ struct tg3spmc
 };
 
 /******************************************************************************
- * PRIVATE
+ * TG3SPMC PRIVATE METHODS
  *****************************************************************************/
-/**
- * @brief Initializes the CAN writer structure.
- * @param self Pointer to the tg3spmc_writer instance.
- */
-void _tg3spmc_writer_init(struct _tg3spmc_writer *self)
-{
-	self->count = 0u;
-
-	self->enable_broadcast = true;
-
-	self->timer_ms = 0u;
-}
-
-/**
- * @brief Initializes the CAN reader structure.
- * @param self Pointer to the tg3spmc_reader instance.
- */
-void _tg3spmc_reader_init(struct _tg3spmc_reader *self)
-{
-	/* TODO implement properly */
-	self->timer_ms = 0u;
-
-	self->recv_flags = 0u;
-
-	self->has_frames = false;
-}
-
 /**
  * @brief Decodes a single CAN frame received from the module.
  *
@@ -300,6 +356,9 @@ void _tg3spmc_reader_init(struct _tg3spmc_reader *self)
  */
 void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 {
+	/* TODO move this into _tg3spmc_reader section, do not decode.
+	 * move decoding into _tg3spm section and put into separate methods.
+	 * Provide decoding only when required explicitly (lazy decoding) */
 	struct  tg3spmc_vars *v = &self->_vars;
 	struct _tg3spmc_io   *i = &self->_io;
 
@@ -420,6 +479,7 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 void _tg3spmc_encode_frame_h45C(struct tg3spmc *self,
 				struct tg3spmc_frame *f)
 {
+	/* TODO return frame instead of writing by reference */
 	struct tg3spmc_config *s = &self->_config;
 
 	uint16_t raw_set_voltage_dc_V = s->voltage_dc_V * 100.0f;
@@ -455,6 +515,7 @@ void _tg3spmc_encode_frame_h45C(struct tg3spmc *self,
 void _tg3spmc_encode_frame_h42C(struct tg3spmc *self,
 				struct tg3spmc_frame *f)
 {
+	/* TODO return frame instead of writing by reference */
 	struct tg3spmc_config *s = &self->_config;
 
 	uint16_t raw_set_current_ac_A = s->current_ac_A * 1500.0f;
@@ -493,6 +554,7 @@ void _tg3spmc_encode_frame_h42C(struct tg3spmc *self,
 void _tg3spmc_encode_frame_h368(struct tg3spmc *self,
 				struct tg3spmc_frame *f)
 {
+	/* TODO return frame instead of writing by reference */
 	(void)self;
 
 	/* Unknown, static data (every ~100ms) */
@@ -518,6 +580,7 @@ void _tg3spmc_queue_tx(struct tg3spmc *self)
 {
 	struct _tg3spmc_io *i = &self->_io;
 
+	/* TODO implement _tg3spmc_writer_put_frame instead */
 	_tg3spmc_encode_frame_h42C(self, &i->tx.frames[0]);
 
 	if (i->tx.enable_broadcast) {
@@ -559,7 +622,7 @@ bool _tg3spmc_detected_errors_during_charge(struct tg3spmc *self)
 }
 
 /******************************************************************************
- * PUBLIC
+ * TG3SPMC PUBLIC
  *****************************************************************************/
 /**
  * @brief Initializes the single phase module controller instance.

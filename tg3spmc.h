@@ -462,7 +462,7 @@ void _tg3spmc_decode_frame(struct tg3spmc *self, struct tg3spmc_frame *f)
 		break;
 	}
 
-	if (valid_frame && (i->rx.recv_flags == (1u << 5u)) - 1u) {
+	if (valid_frame && (i->rx.recv_flags == ((1u << 5u) - 1u))) {
 		i->rx.has_frames = true;
 		i->rx.timer_ms   = 0u;
 	}

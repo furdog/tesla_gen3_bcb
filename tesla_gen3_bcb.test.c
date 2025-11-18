@@ -116,6 +116,10 @@ void tg3spmc_test_read_vars(struct tg3spmc *self)
 
 	/* After valid RX */
 	tg3spmc_put_rx_frame(self, &test_frames[0]);
+	tg3spmc_put_rx_frame(self, &test_frames[1]);
+	tg3spmc_put_rx_frame(self, &test_frames[2]);
+	tg3spmc_put_rx_frame(self, &test_frames[3]);
+	tg3spmc_put_rx_frame(self, &test_frames[4]);
 	assert(tg3spmc_read_vars(self, &v) == true);
 }
 
